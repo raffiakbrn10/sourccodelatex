@@ -1,0 +1,368 @@
+% ============================================================
+%  Hands-On 2 — Instalasi Ubuntu pada VirtualBox
+% ============================================================
+
+\chapter{Automasi dengan Bash Scripting}
+\label{chap:handson-02}
+
+% --- 1. Tugas ---
+\section{Pendahuluan}
+
+\subsection{Latar Belakang}
+Sistem operasi Linux Ubuntu merupakan salah satu sistem operasi yang banyak digunakan
+dalam dunia teknologi informasi, terutama pada pengelolaan server dan pengembangan perangkat lunak.
+Dalam penggunaannya, Linux Ubuntu banyak memanfaatkan terminal atau command line untuk menjalankan
+berbagai perintah, seperti membuat file, mengelola direktori, serta menjalankan program tertentu.
+Pada praktikum ini, sistem operasi Linux dijalankan menggunakan Ubuntu melalui VirtualBox, sehingga
+mahasiswa dapat mempelajari lingkungan Linux tanpa harus mengubah sistem operasi utama pada komputer.
+Melalui terminal, penggua dapat berinteraksi langsung dengan sistem dan memahami bagaimana perintah-perintah
+dalam Linux bekerja.
+
+Namun dalam praktiknya, beberapa perintah-perintah di terminal sering dilakukan secara berulang sehingga
+dapat memakan waktu jika dijalankan secara manual satu persatu. Oleh karena itu, diperlukan perintah suatu cara
+untuk mengotomatisasi perintah-perintah tersebut agar proses pekerjaan menjadi lebih cepat dan efisien. Salah satu cara
+yang dapat digunakan adalah dengan Bash Scripting, yaitu menuliskan beberapa perintah dalam sebuah script yang dapat dijalankan
+melalui terminal. Dengan adanya automasi menggunakan Bash Scripting, user dapat menjalankan beberapa perintah sekaligus secara
+otomatis sehingga dapat menghemat waktu serta lebih praktis dan terstruktur.
+
+\subsection{Tujuan Praktikum}
+Setelah menyelesaikan praktikum ini, mahasiswa diharapkan mampu:
+\begin {enumerate}
+    \item {Menjelaskan peran Sistem Operasi Linux beserta komponen intinya, seperti kernel dan shell.}
+    \item {Menguraikan hierarki sistem berkas Linux dan melakukan navigasi direktori melalui Antarmuka Baris Perintah (CLI).}
+    \item {Menerapkan aturan sintaks perintah Linux, termasuk penggunaan flag dan argumen secara tepat.}
+    \item {Mengoperasikan perintah-perintah dasar untuk manajemen berkas dan direktori (seperti ls, cd, mkdir, rm, cp, mv, touch, dan cat).}
+    \item {Memahami konsep kepemilikan (ownership) dan hak akses (permissions) pada lingkungan berbasis Unix.}
+    \item {Mengonfigurasi hak akses dan kepemilikan menggunakan chmod dan chown, serta memahami penggunaan otorisasi superuser (sudo).}
+\end{enumerate}
+
+\newpage
+\section{Dasar Teori}
+
+\subsection{Automasi dan Bash Scripting}
+Automasi merupakan proses menjalankan suatu tugas secara otomatis dengan bantuan sistem atau program sehingga tugas dapat dilakukan lebih cepat dan efisien.
+Dalam sistem operasi linux, automasi sering dilakukan dengan menggunakan shell scripting, yaitu sekumpulan
+perintah yang ditulis dalam sebuah file untuk dijalankan secara otomatis oleh sistem operasi. Dengan automasi, pengguna tidak perlu mengetik
+perintah yang sama secara berulang di terminal karena perintah tersebut dapat disimpan dalam sebuah script dan bisa dijalankan kapanpun\cite{Bashscripting}.
+
+Salah satu jenis shell scripting yang paling umum digunakan di Linux adalah Bash Scripting. Bash merupakan singkatan dari Bourne Again Shell yang berfungsi sebagai
+command interpreter untuk menjalankan perintah didalam sistem operasi Linux. Bash scrip biasanya berisi kumpulan perintah Linux yang dituliskan dalam
+sebuah file dengan ekstensi .sh dan dijalankan melalu terminal. Dengan menggunakan Bash Scripting, beberapa perintah yang panjan dapat digabung menjadi satu script
+sehingga proses pekerjaan menjadi lebih sederhana dan efisien\cite{BashscriptingGameLab}.
+
+\subsection{Struktur Shell Script}
+Shell script merupakan kumpulan perintah yang ditulis dalam sebuah file teks dan dijalankan oleh shell pada sistem operasi Linux atau Unix. Shell script digunakan
+untuk mengotomatisasi pekerjaan yang biasanya dilakukan secara manual di terminal, seperti pengelolaan file dan direktori sehingga pekerjaan dapat dilakukan lebih efisien\cite{ByteXD2021}.
+
+\subsection{Automasi Hak Eksekusi}
+Pada sistem operasi Linux, setiap file memiliki hak akses yang mengatur bagaimana file tersebut dapat digunakan oleh pengguna. Salah satu hak akses penting pada
+shell script adalah hak eksekusi (execute permission) agar file dapat dijalankan sebagai program melalui terminal.
+Hak akses eksekusi biasanya diberikan menggunakan perintah chmod, misalnya chmod +x script.sh. Setelah izin eksekusi diberikan, script dapat dijalankan langsung
+menggunakan perintah ./script.sh. Pengaturan hak akses ini penting agar proses automasi dapat berjalan dengan baik pada sistem operasi Linux\cite{CyberPermission}.
+
+Tabel \ref{tab:m04-dasar-teori} merangkum hal-hal penting terkait operasi \textit{shell scripting}.
+
+\begin{table}[H]
+    \caption{Tabel Ringkasan Operasi \textit{Shell Scripting}}
+    \label{tab:m04-dasar-teori}
+    \centering
+    \begin{tabular}{|l|p{10cm}|}
+        \hline
+        \textbf{Sintaks} & \textbf{Penjelasan Singkat} \\ \hline
+        \texttt{\#!/bin/bash} & \textit{Shebang}, wajib berada di baris pertama skrip. \\ \hline
+        \texttt{NAMA="Data"} & Deklarasi variabel (tanpa spasi di antara tanda sama dengan). \\ \hline
+        \texttt{echo} & Menampilkan \textit{string} atau isi variabel ke layar terminal. \\ \hline
+        \texttt{cp -r} & Menyalin direktori beserta seluruh isinya secara rekursif. \\ \hline
+        \texttt{chmod +x} & Menambahkan hak eksekusi pada berkas. \\ \hline
+        \texttt{./skrip.sh} & Menjalankan skrip di lokasi \textit{Current Directory} saat ini. \\ \hline
+    \end{tabular}
+\end{table}
+
+\newpage
+\section{Metodologi Praktikum}
+
+\subsection{Alat dan Bahan}
+
+\begin{enumerate}
+    \item \begin{tabular}[t]{@{}p{3.5cm} l}
+        \textbf{Laptop/PC}      & \textbf{: Acer Aspire A514-54}
+    \end{tabular}
+
+    \item \begin{tabular}[t]{@{}p{3.5cm} l}
+        \textbf{Sistem Operasi} & \textbf{: Windows 11}
+    \end{tabular}
+
+    \item \begin{tabular}[t]{@{}p{3.5cm} l}
+        \textbf{VirtualBox}     & \textbf{: Versi 7.2.8}
+    \end{tabular}
+
+    \item \begin{tabular}[t]{@{}p{3.5cm} l}
+        \textbf{ISO Ubuntu}     & \textbf{: Versi 24.04 LTS}
+    \end{tabular}
+\end{enumerate}
+
+\subsection{Langkah-Langkah Praktikum}
+Berikut adalah langkah-langkah menggunakan perintah dasar CLI untuk membuat bash scripting yang dapat mengotomatisasi beberapa perintah Linux:
+
+\begin{enumerate}
+    \item \textbf{Membuat Dua Direktori}\\
+    Pada tahap pertama dilakukan pembuatan dua direktori menggunakan terminal Ubuntu. Direktori tersebut memiliki nama \texttt{mahasiswa\_namaAnda} dan \texttt{matakuliah\_namaAnda}, sebagai contohnya
+    \texttt{mahasiswa\_RaffiAkbarNugraha} dan \texttt{matakuliah\_RaffiAkbarNugraha}. Pembuatan direktori dilakukan dengan perintah mkdir yang berfungsi untuk membuat folder baru di sistem Linux.
+    Kedua direktori ini digunakan untuk menyimpan berkas yang berkaitan dengan data diri mahasiswa dan informasi mata kuliah.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/1.png}
+    \caption{Membuat dua direktori baru}
+    \label{fig:direktoribaru}
+    \end{figure}
+    
+    \item \textbf{Membuat Berkas Data Diri}\\
+    Tahap selanjutnya masuk ke dalam direktori \texttt{mahasiswa\_RaffiAkbarNugraha} untuk membuat berkas yang berisi informasi data diri.
+    Berkas tersebut dibuat menggunakan perintah nano dengan nama \texttt{Datadiri\_RaffiAkbarNugraha.txt}. Pada berkas tersebut diisi dengan
+    informasi berupa Nama, NIM, Program Studi, dan Angkatan.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/2.png}
+    \caption{Membuat berkas data diri}
+    \label{fig:berkasdatadiri}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/2(1).png}
+    \caption{Membuat isi data diri sesuai ketentuan}
+    \label{fig:berkasdatadiri}
+    \end{figure}
+
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/2(2).png}
+    \caption{Menampilkan berkas data diri}
+    \label{fig:berkasdatadiri}
+    \end{figure}
+
+    \item \textbf{Membuat Berkas Mata Kuliah}\\
+    Langkah berikutnya adalah membuat berkas yang berisi informasi mata kuliah pada direktori \texttt{matakuliah\_RaffiAkbarNugraha}.
+    Berkas tersebut bernama \texttt{sistemoperasi\_RaffiAkbarNugraha.txt} dan dibuat menggunakan perintah nano. Isi dari berkas
+    tersebut berupa Nama, Kelas, Mata Kuliah.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/3.png}
+    \caption{Membuat berkas mata kuliah}
+    \label{fig:berkasmatakuliah}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/3(1).png}
+    \caption{Mengisi berkas mata kuliah}
+    \label{fig:berkasmatakuliah}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/3(2).png}
+    \caption{Menampilkan berkas mata kuliah}
+    \label{fig:berkasmatakuliah}
+    \end{figure}
+
+    \item \textbf {Memindahkan Direktori}
+    Setelah kedua direktori dan file berhasil dibuat, direktori dengan nama berkas \texttt{matakuliah\_RaffiAkbarNugraha} dipindahkan ke dalam direktori
+    \texttt{mahasiswa\_RaffiAkbarNugraha} menggunakan perintah \textit{mv}. Perintah ini berfungsi untuk memindahkan berkas atau direktori
+    dari satu lokasi ke lokasi lain.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/4.png}
+    \caption{Perintah untuk memindahkah direktori}
+    \label{fig:pindahdirektori}
+    \end{figure}
+
+
+    \item \textbf {Memodifikasi Hak Akses File}\\
+    Pada tahap ini, kita akan melakukan perubahan hak akses pada berkas yang bernama \texttt{datadiri\_RaffiAkbarNugraha.txt} dengan menghapus
+    izin tulis (write). Ini dilakukan dengan menggunakan perintah \textit{chmod}. Tujuan dari langkah ini adalah untuk menunjukkan bagaimana pengaturan
+    hak akses file pada operasi Linux Ubuntu.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/final1.png}
+    \caption{Sebelum menghapus izin tulis (write)}
+    \label{fig:hakaksesfile}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/final2.png}
+    \caption{Setelah menghapus izin tulis (write)}
+    \label{fig:hakaksesfile}
+    \end{figure}
+
+    \item \textbf {Membuat Shell Script untuk Backup}\\
+    Selanjutnya adalah membuat sebuah shell script bernama \texttt{backup\_tugas.sh} yang berfungsi untuk mengotomatisasi proses penyalinan
+    direktori arsip. Shell script dibuat menggunakan perintah editor nano dan berisi perintah cp -r untuk
+    menyalin direktori secara rekursif.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/7.png}
+    \caption{Perintah untuk membuat shell script menggunakan nano}
+    \label{fig:shellscript}
+    \end{figure}
+    
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/7(1).png}
+    \caption{Perintah untuk membuat shell script untuk backup}
+    \label{fig:shellscript}
+    \end{figure}
+
+    \item \textbf {Menjalankan Shell Script}\\
+    Setelah membuat shell, langkah selanjutnya adalah memberikan izin eksekusi pada file script menggunakan perintah chmod +x. Perintah ini dilakukan
+    agar berkas script dapat dijalankan sebagai program.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/8.png}
+    \caption{Perintah untuk menjalankan shell script untuk backup}
+    \label{fig:shellscript}
+    \end{figure}
+
+    \item \textbf {Verifikasi Hasil}\\
+    Langkah terakhir adalah melakukan verifikasi untuk memastikan bahwa proses backup telah berhasil dilakukan
+    dengan menggunakan perintah ls untuk melihat apakah direktori \texttt{Arsip\_RaffiAkbarNugraha} telah terbentuk dan berisi berkas
+    yang sama dengan direktori asli.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/9.png}
+    \caption{Perintah untuk melakukan verifikasi hasil}
+    \label{fig:Hasil}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/10.png}
+    \caption{Tree yang dihasilkan}
+    \label{fig:tree}
+    \end{figure}
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/10(1).png}
+    \caption{Tree yang dihasilkan}
+    \label{fig:tree}
+    \end{figure}
+
+\end{enumerate}
+
+\newpage
+\section{Pembahasan}
+Pada praktikum ini, saya mempelajari konsep automasi menggunakan bash scripting pada sistem operasi Linux Ubuntu.
+Bash scripting merupakan cara untuk menjalankan beberapa perintah terminal secara otomatis melalui file script. Dengan
+menggunakan perintah-perintah bash scripting, pekerjaan yang biasanya dilakukan secara manual di terminal dapat dilakukan
+dengan lebih cepat dan efisien. Selain itu, penggunaan terminal juga membantu saya memahami bagaimana sistem operasi
+Linux dapat mengelola file dan direktori.
+
+Pada tahap awal, saya membuat dua direktori menggunakan perintah mkdir pada terminal Ubuntu. Direktori tersebut diberi nama
+\texttt{mahasiswa\_RaffiAkbarNugraha} dan \texttt{matakuliah\_RaffiAkbarNugraha}. Pembuatan direktori ini bertujuan untukm
+mengelompokkan file berdasarkan jenisnya agar lebih terorganisir. Setelah direktori berhasil dibuat, saya menggunakan perintah
+cd untuk masuk ke dalam direktori tersebut dan memastikan bahwa direktori telah dibuat dengan benar.
+
+Selanjutnya, saya membuat beras yang berisi data diri menggunakan perintah nano. Berkas tersebut diberi nama \texttt{datadiri\_RaffiAkbarNugraha.txt}
+dan disimpan pada direktori mahasiswa. Di dalam berkas tersebut saya menyimpan informasi seperti Nama, NIM, Program Studi, Angkatan.
+setelah selesai menuliskan isi berkas, saya menggunakan perintah cat untuk memanggil atau menampilkan isi berkas tersebut
+di terminal untuk memastikan bahwa data telah tersimpan dengan benar.
+
+Melalui praktikum ini, saya dapat memahami penggunaan beberapa perintah dasar pada Command Line Interface (CLI) seperti
+\textit{mkdir, nano, cd, cat, dll}. Perintah-perintah tersebut membantu saya dalam melakukan pengelolaan file dan direktori pada sistem
+operasi Linux Ubuntu. Selain itu, saya juga memahami bahwa automasi menggunakan bash scripting dapat mempermudah pekerjaan yang bersifat
+berulang, sehingga proses kerja menjadi lebih efisien dan terstruktur
+
+
+%Kesimpulan
+\newpage
+\section{Kesimpulan}
+Berdasarkan praktikum yang telah dilakukan, saya dapat memahami konsep dan peran shell scripting dalam automasi sistem operasi.
+Shell scripting memungkinkan beberapa perintah pada terminal dijalankan secara otomatis melalui script, sehingga
+pekerjaan yang dilakukan secara berulang dapat dilakukan dengan cepat dn efisien.
+
+Melalui praktikum ini juga, saya dapat mempelajari dan menerapkan sintaks dasar pasa bash, seperti penggunaan \textbf{Shebang} (\texttt{\#!/bin/bash})
+yang berfungsi untuk menentukan interpreter yang digunakan dalam menjalankan script. Selain itu, saya juga memahami cara menggunakan
+variabel dalam bash untuk menyimpan dan memproses data dalam script.
+
+Pada praktikum ini saya berhasil membuat sebuah shell script dengan ekstensi \textit{.sh} yang menggabungkan beberapa perintah dasar Linux seperti \textit{mkdir, cp, dan cat}.
+Script tersebut dapat menjalankan beberapa perintah sekaligus sehingga proses yang biasanya dilakukan secara manual
+dapat dilakukan secara otomatis.
+
+Dari praktikum ini juga, dapat dipelajari bagaimana cara mengatur hak akses eksekusi pada file script menggunakan perintah \textit{chmod}.
+Dengan memberikan izin eksekusi pada file \textit{.sh}, script dapat dijalankan secara langsung melalui terminal. Hal ini membantu saya memahami
+pentingnya pengaturan hak akses dalam menjalankan program pada sistem operasi Linux.
+
+%Lampiran penggunaan AI
+\newpage
+\section{Lampiran: Bukti Penggunaan AI}
+
+\subsection{Identitas Penggunaan AI}
+
+\begin{table}[h]
+\caption{Informasi Alat AI yang Digunakan}
+\label{tab:h02-ai-info}
+\centering
+\begin{tabulary}{\textwidth}{|L|L|}
+\hline
+\textbf{Keterangan}   & \textbf{Isian} \\ \hline
+Nama alat AI          & \textit{ChatGPT} \\ \hline
+Versi / Model         & \textit{GPT-4o} \\ \hline
+Tanggal penggunaan    & \textit{13-03-2026} \\ \hline
+Tujuan penggunaan     & \textit{Membantu menjelaskan beberapa perintah dasar Linux} \\ \hline
+\end{tabulary}
+\end{table}
+
+\subsection{Tangkapan Layar Percakapan AI}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a1.png}
+    \caption{Prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a2.png}
+    \caption{Hasil prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a3.png}
+    \caption{Hasil prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a4.png}
+    \caption{Hasil prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a5.png}
+    \caption{Hasil prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/a6.png}
+    \caption{Hasil prompt pada chatGPT}
+    \label{fig:h02-ai-screenshot-1}
+\end{figure}
