@@ -8,33 +8,19 @@
 % --- 1. Pendahuluan ---
 \section{Pendahuluan}
 \label{sec:pendahuluan}
-Pada praktikum minggu ini, modul yang dipelajari berfokus pada sistem \textit{build} menggunakan GCC (\textit{GNU Compiler Collection})
-serta penerapan otomatisasi proses kompilasi dengan menggunakan \textit{Makefile}. GCC merupakan salah satu compiler yang banyak digunakan
-dalam pengembangan perangkat lunak, khususnya pada sistem operasi berbasis Linux, karena kemampuannya dalam menangani berbagai tahapan kompilasi
-seperti preprocessing, compilation, assembly, hingga linking.
+Pada praktikum minggu ini, materi yang dipelajari berfokus pada sistem \textit{build} menggunakan GCC (\textit{GNU Compiler Collection}) serta penerapan otomatisasi proses kompilasi melalui \textit{Makefile}. GCC merupakan salah satu \textit{compiler} yang umum digunakan dalam pengembangan perangkat lunak, khususnya pada sistem operasi berbasis Linux, karena mampu menangani berbagai tahapan kompilasi, mulai dari \textit{preprocessing}, \textit{compilation}, \textit{assembly}, hingga \textit{linking}.
 
-Dalam pengembangan perangkat lunak, proses mengubah \textit{source code} menjadi program \textit{executable} merupakan tahapan yang sangat penting
-dan mendasar. Proses ini tidak hanya melibatkan penerjemahan kode program ke dalam bahasa mesin, tetapi juga mencakup pengelolaan dependensi antar
-file serta pengaturan alur kompilasi agar program dapat dibangun secara efisien dan terstruktur.
+Dalam pengembangan perangkat lunak, proses mengubah \textit{source code} menjadi program \textit{executable} merupakan tahapan dasar yang sangat penting. Proses ini tidak hanya mencakup penerjemahan kode program ke dalam bahasa mesin, tetapi juga melibatkan pengelolaan dependensi antar file serta pengaturan alur kompilasi agar pembangunan program dapat dilakukan secara efisien dan sistematis.
 
-Selain itu, penggunaan \textit{Makefile} dalam praktikum ini bertujuan untuk mengotomatisasi proses \textit{build}, sehingga proses kompilasi tidak
-perlu dilakukan secara manual setiap kali terjadi perubahan pada kode sumber. Dengan adanya \textit{Makefile}, proses kompilasi menjadi lebih
-terorganisir, efisien, dan dapat meminimalkan kesalahan, terutama pada proyek yang memiliki banyak file sumber. Hal ini juga membantu meningkatkan
-pemahaman mahasiswa dalam mengelola proyek pemrograman secara lebih profesional di lingkungan Linux.
+Selain itu, penggunaan \textit{Makefile} pada praktikum ini bertujuan untuk mengotomatisasi proses \textit{build}, sehingga proses kompilasi tidak perlu dilakukan secara manual setiap kali terdapat perubahan pada kode sumber. Dengan adanya \textit{Makefile}, proses kompilasi menjadi lebih terstruktur, efisien, serta dapat mengurangi potensi kesalahan, terutama pada proyek yang memiliki banyak file sumber. Hal ini juga membantu meningkatkan pemahaman mahasiswa dalam mengelola proyek pemrograman secara lebih profesional pada lingkungan Linux.
 
 \subsection{Latar Belakang}
 \label{subsec:latar-belakang}
-Pemahaman mengenai sistem \textit{build} tidak hanya terbatas pada proses menjalankan perintah \textit{compile}, tetapi juga mencakup pemahaman terhadap
-tahapan-tahapan yang terjadi di dalamnya, yaitu \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}.
-GCC (\textit{GNU Compiler Collection}) merupakan salah satu compiler utama yang umum digunakan dalam pemrograman C/C++ yang mendukung seluruh rangkaian
-proses tersebut dari awal hingga menghasilkan program \textit{executable}.
+Pemahaman mengenai sistem \textit{build} tidak hanya sebatas menjalankan perintah \textit{compile}, tetapi juga meliputi pemahaman terhadap setiap tahapan yang terjadi di dalamnya, yaitu \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}. GCC (\textit{GNU Compiler Collection}) merupakan salah satu \textit{compiler} utama yang banyak digunakan dalam pemrograman C/C++ karena mampu mendukung seluruh rangkaian proses tersebut hingga menghasilkan program \textit{executable}.
 
-Namun, seiring meningkatnya kompleksitas proyek perangkat lunak serta bertambahnya jumlah file sumber, proses kompilasi secara manual menggunakan perintah
-GCC menjadi kurang efisien. Hal ini disebabkan oleh sifatnya yang repetitif, memakan waktu, serta berpotensi menimbulkan kesalahan dalam pengelolaan file yang saling bergantung.
+Namun, seiring dengan meningkatnya kompleksitas proyek perangkat lunak dan bertambahnya jumlah file sumber, proses kompilasi secara manual menggunakan perintah GCC menjadi kurang efektif. Hal ini disebabkan karena proses tersebut bersifat berulang, memerlukan waktu yang lebih lama, serta memiliki potensi menimbulkan kesalahan dalam pengelolaan file yang saling memiliki dependensi.
 
-Oleh karena itu, diperlukan sebuah alat otomasi \textit{build} seperti GNU Make. Dengan memanfaatkan \texttt{Makefile}, sistem dapat melakukan pelacakan dependensi
-(\textit{dependency tracking}) secara otomatis dan hanya melakukan kompilasi ulang pada bagian kode yang mengalami perubahan. Kombinasi antara pemahaman dasar GCC dan
-penguasaan penggunaan \texttt{Makefile} dapat meningkatkan efisiensi waktu serta membantu dalam pengelolaan proyek perangkat lunak yang lebih terstruktur dan profesional.
+Oleh sebab itu, dibutuhkan suatu alat untuk otomatisasi proses \textit{build}, seperti GNU Make. Dengan memanfaatkan \texttt{Makefile}, sistem dapat melakukan pelacakan dependensi (\textit{dependency tracking}) secara otomatis dan hanya melakukan kompilasi ulang pada bagian kode yang mengalami perubahan. Kombinasi antara pemahaman dasar mengenai GCC dan penguasaan penggunaan \texttt{Makefile} dapat meningkatkan efisiensi waktu sekaligus membantu pengelolaan proyek perangkat lunak agar lebih terstruktur dan profesional.
 
 \subsection{Tujuan}
 \label{subsec:tujuan}
@@ -51,19 +37,13 @@ penguasaan penggunaan \texttt{Makefile} dapat meningkatkan efisiensi waktu serta
 \section{Dasar Teori}
 \label{sec:dasar-teori}
 
-\subsection{GNU Compiler Collection (GCC)}
-\label{subsec:teori-gcc}
-Sistem \textit{build} berfungsi untuk mengubah \textit{source code} menjadi file \textit{executable}. Menggunakan GCC (\textit{GNU Compiler Collection}),
-proses kompilasi berjalan melalui empat tahapan utama secara berurutan. Pertama adalah \textit{preprocessing} (menangani direktif seperti \verb|#include|
-dan \verb|#define|), kedua adalah \textit{compilation} (menerjemahkan kode ke bahasa assembly), ketiga adalah \textit{assembly} (menghasilkan object file
-biner/kode mesin), dan terakhir adalah \textit{linking} (menghubungkan object file dengan library eksternal/internal untuk menghasilkan \textit{executable}) \cite{GCCDocumentation, GeeksforGeeksCompilation}.
+\subsection{}
+\label{subsec:}
+Isi aja dasar teori
 
-\subsection{Otomatisasi dengan Makefile}
-\label{subsec:teori-makefile}
-Untuk mengotomatisasi tahapan ini pada proyek berskala besar, digunakan utilitas GNU Make dengan file konfigurasi bernama \texttt{Makefile}.
-GNU Make membaca aturan yang mendefinisikan \textit{target} (file output), \textit{dependency} (file sumber yang dibutuhkan), dan \textit{recipe} (perintah eksekusi).
-Fitur utama Makefile adalah \textit{dependency tracking}; ia hanya akan mengeksekusi ulang kompilasi jika timestamp file \textit{dependency} lebih baru daripada file
-\textit{target}, menghemat banyak waktu pada proses \textit{development} \cite{gnu_make_manual, gcc_overall_options}.
+\subsection{}
+\label{subsec:}
+isi dasar teori
 
 % --- 3. Alat dan Bahan ---
 \newpage
@@ -423,47 +403,28 @@ Berikut adalah perangkat keras dan lunak yang digunakan selama praktikum:
 \newpage
 \section{Pembahasan}
 \label{sec:pembahasan}
-Berdasarkan serangkaian percobaan yang telah dilakukan, proses pembangunan perangkat lunak terbukti membutuhkan langkah-langkah yang terstruktur, dimulai dari kompilasi tingkat
-dasar hingga otomatisasi. Pada bagian Sistem Build dengan GCC (merujuk pada Bagian \ref{subsec:langkah-gcc}), terlihat jelas bahwa \textit{source code} bahasa tingkat tinggi
-(seperti \texttt{perkenalan.c}) tidak dapat langsung dieksekusi oleh sistem operasi. Melalui perintah \texttt{gcc} dan tambahan \textit{flag} spesifik (\texttt{-E}, \texttt{-S},
-\texttt{-c}), setiap tahapan kompilasi dapat diobservasi secara mandiri. Mulai dari ekspansi \textit{macro} dan \textit{header} pada tahap \textit{preprocessing}, penerjemahan instruksi
-menjadi representasi \textit{assembly}, konversi menjadi file objek biner, hingga penggabungan file objek dengan library standar pada tahap \textit{linking}. Analisis kompilasi manual
-ini memperlihatkan transparansi bagaimana compiler menerjemahkan logika pemrogram ke bahasa mesin.
+Berdasarkan rangkaian percobaan yang telah dilakukan, proses pembangunan perangkat lunak terbukti memerlukan tahapan yang sistematis, mulai dari kompilasi dasar hingga proses otomatisasi. Pada bagian Sistem \textit{Build} dengan GCC (mengacu pada Bagian \ref{subsec:langkah-gcc}), terlihat bahwa \textit{source code} yang ditulis dalam bahasa tingkat tinggi, seperti \texttt{perkenalan.c}, tidak dapat langsung dijalankan oleh sistem operasi. Melalui penggunaan perintah \texttt{gcc} beserta beberapa \textit{flag} khusus, seperti \texttt{-E}, \texttt{-S}, dan \texttt{-c}, setiap tahap kompilasi dapat diamati secara terpisah. Tahapan tersebut meliputi ekspansi \textit{macro} dan \textit{header} pada proses \textit{preprocessing}, penerjemahan instruksi menjadi kode \textit{assembly}, konversi menjadi file objek biner, hingga penggabungan file objek dengan pustaka standar pada tahap \textit{linking}. Proses kompilasi manual ini memberikan gambaran yang jelas mengenai bagaimana compiler menerjemahkan logika program menjadi bahasa mesin.
 
-Namun, ketika masuk ke tahap kompilasi yang lebih kompleks atau melibatkan manipulasi file berulang, melakukan eksekusi perintah GCC secara manual menjadi kurang efisien. Hal ini dijawab
-pada bagian Penulisan Makefile Mendasar (merujuk pada Bagian \ref{subsec:langkah-makefile-dasar}). Terlihat bahwa pembuatan \texttt{Makefile} menyederhanakan interaksi pengguna dengan compiler.
-File \texttt{Makefile} bertindak sebagai aturan (\textit{rule}) yang menghubungkan target hasil akhir dengan prasyarat file utamanya (\textit{dependencies}). Dengan memanggil perintah \texttt{make},
-seluruh prosedur pemanggilan \texttt{gcc} dilakukan oleh sistem berdasarkan konfigurasi di dalam file tersebut. Kendala sintaks seperti penggunaan karakter \texttt{TAB} pada resep juga menjadi
-pembelajaran penting untuk menghindari \textit{error missing separator} yang sangat sering terjadi saat mendefinisikan \textit{recipe} di Makefile.
+Namun, ketika proses kompilasi mulai melibatkan proyek yang lebih kompleks atau membutuhkan manipulasi file secara berulang, penggunaan perintah GCC secara manual menjadi kurang efisien. Hal tersebut dibahas pada bagian Penulisan \texttt{Makefile} Mendasar (mengacu pada Bagian \ref{subsec:langkah-makefile-dasar}). Pada tahap ini, pembuatan \texttt{Makefile} terbukti mampu menyederhanakan interaksi pengguna dengan compiler. File \texttt{Makefile} berfungsi sebagai sekumpulan aturan (\textit{rule}) yang menghubungkan target akhir dengan file prasyaratnya (\textit{dependencies}). Dengan menjalankan perintah \texttt{make}, seluruh proses pemanggilan \texttt{gcc} akan dilakukan secara otomatis sesuai konfigurasi yang telah didefinisikan. Selain itu, kendala sintaks seperti penggunaan karakter \texttt{TAB} pada bagian \textit{recipe} juga menjadi pembelajaran penting untuk menghindari \textit{error missing separator} yang sering muncul saat penulisan \textit{Makefile}.
 
-Otomatisasi tersebut menjadi semakin kokoh saat menangani proyek yang bersifat modular, seperti pada implementasi fungsi matematika dan kalkulator (merujuk pada Bagian \ref{subsec:langkah-makefile-kompleks}
-dan Bagian \ref{subsec:langkah-kalkulator}). Pada kasus ini, kode dibagi menjadi komponen antarmuka program (\textit{header}), implementasi fungsi terpisah (\textit{source file}), dan logika pemanggilan utama
-(\textit{main}). Dalam hal ini, fitur variabel (\textit{compiler flags} seperti \texttt{CC=gcc}) dan variabel otomatis seperti \verb|$@| (merujuk pada target) dan \verb|$^| (merujuk pada dependensi)
-membuat penulisan \texttt{Makefile} jauh lebih ringkas dan dinamis. Proses \textit{dependency tracking} yang dimiliki GNU Make juga terbukti bekerja efisien, memastikan hanya file yang mengalami modifikasi
-yang akan dikompilasi ulang, sekaligus menyediakan target praktis seperti \texttt{make clean} untuk manajemen ruang kerja (\textit{workspace}) yang bersih.
+Proses otomatisasi tersebut menjadi semakin efektif ketika diterapkan pada proyek yang bersifat modular, seperti implementasi fungsi matematika dan kalkulator (mengacu pada Bagian \ref{subsec:langkah-makefile-kompleks} dan Bagian \ref{subsec:langkah-kalkulator}). Pada kasus ini, kode program dipisahkan menjadi beberapa komponen, yaitu antarmuka program (\textit{header}), implementasi fungsi pada \textit{source file} terpisah, serta logika utama pada file \textit{main}. Dalam kondisi ini, penggunaan variabel seperti \texttt{CC=gcc} dan variabel otomatis seperti \verb|$@| yang merujuk pada target serta \verb|$^| yang merujuk pada seluruh dependensi membuat penulisan \texttt{Makefile} menjadi lebih ringkas, fleksibel, dan dinamis. Fitur \textit{dependency tracking} pada GNU Make juga terbukti sangat efisien karena hanya melakukan kompilasi ulang pada file yang mengalami perubahan, serta menyediakan target tambahan seperti \texttt{make clean} untuk menjaga kebersihan \textit{workspace}.
 
 % --- 6. Kesimpulan ---
 \newpage
 \section{Kesimpulan}
 \label{sec:kesimpulan}
 
-Berdasarkan hasil praktikum yang telah dilakukan, dapat disimpulkan bahwa proses kompilasi kode sumber C/C++ menggunakan \textit{GNU Compiler Collection} (\texttt{GCC}) telah dipahami melalui praktik langsung.
-Proses kompilasi tidak berlangsung secara tunggal, melainkan melalui beberapa tahapan yang saling berurutan.
+Berdasarkan hasil praktikum yang telah dilakukan, dapat disimpulkan bahwa proses kompilasi kode sumber C/C++ menggunakan \textit{GNU Compiler Collection} (\texttt{GCC}) telah berhasil dipahami melalui praktik secara langsung. Proses kompilasi tersebut tidak berlangsung dalam satu tahap saja, melainkan melalui beberapa tahapan yang saling berurutan dan saling berkaitan.
 
-Pada praktikum ini juga dipahami bahwa tahapan \textit{build} terdiri dari \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}.
-Setiap tahapan tersebut memiliki fungsi masing-masing dalam mengubah kode sumber menjadi program yang dapat dieksekusi.
+Pada praktikum ini juga dipahami bahwa proses \textit{build} terdiri atas beberapa tahapan, yaitu \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}. Masing-masing tahapan memiliki peran tersendiri dalam mengubah kode sumber menjadi program yang dapat dijalankan oleh sistem.
 
-Selain itu, konsep dasar otomatisasi kompilasi (\textit{build automation}) perangkat lunak telah dipahami. Konsep ini memungkinkan proses kompilasi dilakukan secara otomatis sehingga tidak perlu menjalankan
-perintah \texttt{gcc} secara manual berulang kali ketika terjadi perubahan pada program.
+Selain itu, konsep dasar otomatisasi kompilasi (\textit{build automation}) pada perangkat lunak juga telah dipahami. Konsep ini memungkinkan proses kompilasi dilakukan secara otomatis sehingga pengguna tidak perlu menjalankan perintah \texttt{gcc} secara manual berulang kali setiap kali terdapat perubahan pada program.
 
-Struktur dasar file \texttt{Makefile} juga telah dipahami, yang terdiri dari \textit{target}, komponen syarat (\textit{dependency}),
-dan resep (\textit{recipe}). Struktur ini digunakan untuk mengatur proses \textit{build} agar lebih terstruktur, otomatis, dan mudah dikelola.
+Struktur dasar file \texttt{Makefile} juga telah dipahami, yang terdiri dari \textit{target}, komponen syarat (\textit{dependency}), dan resep (\textit{recipe}). Struktur tersebut digunakan untuk mengatur proses \textit{build} agar menjadi lebih sistematis, otomatis, dan mudah untuk dikelola.
 
-Penggunaan variabel kompilator dan \textit{flags} dalam \texttt{Makefile} telah dipraktikkan. Variabel ini digunakan untuk mempermudah pengaturan perintah
-kompilasi sehingga proses \textit{build} menjadi lebih fleksibel dan mudah disesuaikan.
+Penggunaan variabel kompilator serta \textit{flags} dalam \texttt{Makefile} juga telah dipraktikkan. Variabel ini berfungsi untuk mempermudah pengaturan perintah kompilasi sehingga proses \textit{build} menjadi lebih fleksibel dan mudah disesuaikan sesuai kebutuhan.
 
-Terakhir, penggunaan \textit{automatic variables} seperti \verb|$@| dan \verb|$^| telah dipahami. Variabel ini sangat membantu
-dalam menyederhanakan penulisan \texttt{Makefile} karena dapat merepresentasikan target dan dependency secara otomatis tanpa perlu ditulis berulang.
+Terakhir, penggunaan \textit{automatic variables} seperti \verb|$@| dan \verb|$^| juga telah dipahami. Variabel tersebut sangat membantu dalam menyederhanakan penulisan \texttt{Makefile} karena mampu merepresentasikan target dan \textit{dependency} secara otomatis tanpa perlu dituliskan secara berulang.
 
 \newpage
 \section{Lampiran: Bukti Penggunaan AI}
