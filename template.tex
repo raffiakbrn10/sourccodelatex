@@ -1,571 +1,469 @@
 % ============================================================
-%  Hands-On X — [Judul Praktikum]
+%  Hands-On X — Sistem Build GCC dan Otomatisasi Makefile
 % ============================================================
 
-\chapter{Sistem Build dengan GCC}
+\chapter{Sistem Build GCC dan Otomatisasi dengan Makefile}
 \label{chap:handson-x}
 
 % --- 1. Pendahuluan ---
 \section{Pendahuluan}
 \label{sec:pendahuluan}
+Pada praktikum minggu ini, modul yang dipelajari berfokus pada sistem \textit{build} menggunakan GCC (\textit{GNU Compiler Collection})
+serta penerapan otomatisasi proses kompilasi dengan menggunakan \textit{Makefile}. GCC merupakan salah satu compiler yang banyak digunakan
+dalam pengembangan perangkat lunak, khususnya pada sistem operasi berbasis Linux, karena kemampuannya dalam menangani berbagai tahapan kompilasi
+seperti preprocessing, compilation, assembly, hingga linking.
+
+Dalam pengembangan perangkat lunak, proses mengubah \textit{source code} menjadi program \textit{executable} merupakan tahapan yang sangat penting
+dan mendasar. Proses ini tidak hanya melibatkan penerjemahan kode program ke dalam bahasa mesin, tetapi juga mencakup pengelolaan dependensi antar
+file serta pengaturan alur kompilasi agar program dapat dibangun secara efisien dan terstruktur.
+
+Selain itu, penggunaan \textit{Makefile} dalam praktikum ini bertujuan untuk mengotomatisasi proses \textit{build}, sehingga proses kompilasi tidak
+perlu dilakukan secara manual setiap kali terjadi perubahan pada kode sumber. Dengan adanya \textit{Makefile}, proses kompilasi menjadi lebih
+terorganisir, efisien, dan dapat meminimalkan kesalahan, terutama pada proyek yang memiliki banyak file sumber. Hal ini juga membantu meningkatkan
+pemahaman mahasiswa dalam mengelola proyek pemrograman secara lebih profesional di lingkungan Linux.
 
 \subsection{Latar Belakang}
 \label{subsec:latar-belakang}
-Pada praktikum minggu ini, modul yang dipelajari adalah Sistem Build menggunakan GCC (GNU Compiler Collection).
-Dalam dunia pemrograman dan pengembangan perangkat lunak, proses mengubah source code menjadi program yang dapat dijalankan
-merupakan tahapan yang sangat penting. Salah satu tools yang sering digunakan dalam proses tersebut adalah GCC (GNU Compiler Collection),
-yaitu compiler yang mendukung bahasa pemrograman seperti C dan C++. Pada mata kuliah praktikum Sistem Operasi, pemahaman mengenai sistem
-build dengan GCC menjadi dasar yang perlu dikuasai oleh mahasiswa Teknik Informatika, karena materi ini berkaitan langsung
-dengan cara sistem operasi memproses program melalui compiler dan terminal berbasis Linux.
+Pemahaman mengenai sistem \textit{build} tidak hanya terbatas pada proses menjalankan perintah \textit{compile}, tetapi juga mencakup pemahaman terhadap
+tahapan-tahapan yang terjadi di dalamnya, yaitu \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}.
+GCC (\textit{GNU Compiler Collection}) merupakan salah satu compiler utama yang umum digunakan dalam pemrograman C/C++ yang mendukung seluruh rangkaian
+proses tersebut dari awal hingga menghasilkan program \textit{executable}.
 
-Pemahaman tentang sistem build tidak hanya sebatas menjalankan perintah compile, tetapi juga mencakup proses yang terjadi di dalamnya,
-seperti preprocessing, compiling, assembling, dan linking. Dengan mempelajari modul ini, mahasiswa dapat memahami alur bagaimana kode program
-diterjemahkan hingga menjadi file executable. Selain itu, penggunaan GCC melalui command line juga melatih mahasiswa agar lebih terbiasa dengan
-lingkungan Linux Ubuntu yang banyak digunakan dalam pengembangan sistem dan software. Oleh karena itu, praktikum ini penting untuk memberikan dasar
-pemahaman yang kuat mengenai proses build program sebagai bekal untuk mempelajari materi yang lebih lanjut di bidang sistem operasi dan pemrograman.
+Namun, seiring meningkatnya kompleksitas proyek perangkat lunak serta bertambahnya jumlah file sumber, proses kompilasi secara manual menggunakan perintah
+GCC menjadi kurang efisien. Hal ini disebabkan oleh sifatnya yang repetitif, memakan waktu, serta berpotensi menimbulkan kesalahan dalam pengelolaan file yang saling bergantung.
+
+Oleh karena itu, diperlukan sebuah alat otomasi \textit{build} seperti GNU Make. Dengan memanfaatkan \texttt{Makefile}, sistem dapat melakukan pelacakan dependensi
+(\textit{dependency tracking}) secara otomatis dan hanya melakukan kompilasi ulang pada bagian kode yang mengalami perubahan. Kombinasi antara pemahaman dasar GCC dan
+penguasaan penggunaan \texttt{Makefile} dapat meningkatkan efisiensi waktu serta membantu dalam pengelolaan proyek perangkat lunak yang lebih terstruktur dan profesional.
 
 \subsection{Tujuan}
 \label{subsec:tujuan}
 \begin{enumerate}
-    \item \textit{Memahami proses kompilasi kode sumber C/C++ menggunakan GNU Compiler Collection (GCC)}
-    \item \textit{Mengenal dan mempraktikan tahapan dalam proses build: preparasi, kompilasi, perakitan (assembly), dan linking}
+    \item \textit{Memahami proses kompilasi kode sumber C/C++ menggunakan GNU Compiler Collection (GCC).}
+    \item \textit{Mengenal dan mempraktikkan tahapan dalam proses build: preparasi, kompilasi, perakitan (assembly), dan linking.}
+    \item \textit{Memahami konsep dasar otomatisasi kompilasi (build automation) perangkat lunak.}
+    \item \textit{Memahami dan menjelaskan struktur dasar file Makefile (Target, Komponen Syarat, dan Resep).}
+    \item \textit{Menggunakan variabel kompilator dan flags penanda dalam Makefile.}
+    \item \textit{Menggunakan variabel otomatis (automatic variables) seperti} \verb|$@| \textit{dan} \verb|$^| \textit{untuk efisiensi skrip build.}
 \end{enumerate}
 
 % --- 2. Dasar Teori ---
 \section{Dasar Teori}
 \label{sec:dasar-teori}
 
-Sistem build merupakan proses penting dalam pengembangan perangkat lunak yang berfungsi untuk mengubah source code menjadi file executable yang dapat
-dijalankan oleh sistem operasi. Pada bahasa C dan C++, salah satu compiler yang paling umum digunakan adalah GCC (GNU Compiler Collection). GCC adalah
-kumpulan compiler open-source yang mendukung berbagai bahasa pemrograman seperti C, C++, Objective-C, dan lainnya. Dalam lingkungan Linux, GCC menjadi
-tools utama untuk proses kompilasi program melalui terminal atau command line\cite{GCCDocumentation}.
+\subsection{GNU Compiler Collection (GCC)}
+\label{subsec:teori-gcc}
+Sistem \textit{build} berfungsi untuk mengubah \textit{source code} menjadi file \textit{executable}. Menggunakan GCC (\textit{GNU Compiler Collection}),
+proses kompilasi berjalan melalui empat tahapan utama secara berurutan. Pertama adalah \textit{preprocessing} (menangani direktif seperti \verb|#include|
+dan \verb|#define|), kedua adalah \textit{compilation} (menerjemahkan kode ke bahasa assembly), ketiga adalah \textit{assembly} (menghasilkan object file
+biner/kode mesin), dan terakhir adalah \textit{linking} (menghubungkan object file dengan library eksternal/internal untuk menghasilkan \textit{executable}) \cite{GCCDocumentation, GeeksforGeeksCompilation}.
 
-Dalam penggunaan dasar, GCC dapat dijalankan dengan perintah seperti gcc program.c -o program, di mana file source code program.c akan dikompilasi
-menjadi file output bernama program. Selain itu, GCC juga menyediakan opsi khusus untuk menghentikan proses pada tahap tertentu, misalnya -E untuk preprocessing,
--S untuk menghasilkan file assembly, dan -c untuk menghasilkan object file tanpa proses linking. Fitur ini sangat membantu mahasiswa untuk memahami setiap
-tahap build secara lebih rinci saat praktikum berlangsung\cite{GeeksforGeeksCompilation}.
+\subsection{Otomatisasi dengan Makefile}
+\label{subsec:teori-makefile}
+Untuk mengotomatisasi tahapan ini pada proyek berskala besar, digunakan utilitas GNU Make dengan file konfigurasi bernama \texttt{Makefile}.
+GNU Make membaca aturan yang mendefinisikan \textit{target} (file output), \textit{dependency} (file sumber yang dibutuhkan), dan \textit{recipe} (perintah eksekusi).
+Fitur utama Makefile adalah \textit{dependency tracking}; ia hanya akan mengeksekusi ulang kompilasi jika timestamp file \textit{dependency} lebih baru daripada file
+\textit{target}, menghemat banyak waktu pada proses \textit{development} \cite{gnu_make_manual, gcc_overall_options}.
 
 % --- 3. Alat dan Bahan ---
 \newpage
-\section{Metodologi Praktikum}
-\subsection{Alat dan Bahan}
+\section{Alat dan Bahan}
 \label{sec:alat-bahan}
-
-\begin{enumerate}
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{Laptop/PC}      & \textbf{: Acer Aspire A514-54}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{Sistem Operasi} & \textbf{: Windows 11}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{VirtualBox}     & \textbf{: Versi 7.2.8}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{ISO Ubuntu}     & \textbf{: Versi 24.04 LTS}
-    \end{tabular}
-\end{enumerate}
+Berikut adalah perangkat keras dan lunak yang digunakan selama praktikum:
+\begin{itemize}
+	\item \textbf{Perangkat Keras:} Laptop/PC (Acer Aspire A514-54)
+	\item \textbf{Sistem Operasi Host:} Windows 11
+	\item \textbf{Perangkat Lunak Virtualisasi:} VirtualBox Versi 7.2.8
+	\item \textbf{Sistem Operasi Guest:} ISO Ubuntu Versi 24.04 LTS
+\end{itemize}
 
 % --- 4. Langkah-Langkah Praktikum ---
-\subsection{Langkah-Langkah Praktikum}
+\newpage
+\section{Langkah-Langkah Praktikum}
 \label{sec:langkah}
+
+% Sesi 1
+\subsection{Sistem Build dengan GCC}
+\label{subsec:langkah-gcc}
 
 \noindent
 \textbf{Langkah 1: Membuat Direktori}\\
-\textit{
-Membuat direktori baru dengan nama PraktikumSO menggunakan perintah mkdir PraktikumSO, lalu masuk ke dalam
-direktori tersebut dengan perintah cd PraktikumSO.
-}
-
+\textit{Membuat direktori baru dengan nama PraktikumSO menggunakan perintah \texttt{mkdir PraktikumSO}, lalu masuk ke dalam direktori tersebut dengan perintah \texttt{cd PraktikumSO}.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt1.png}
-    \caption{Perintah mkdir membuat sistem akan membuat direktori baru bernama praktikum. Perintah cd praktikum memindahkan posisi kerja terminal
-    ke folder tersebut.}
-    \label{fig:langkah-1}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt1.png}
+	\caption{Perintah mkdir membuat sistem akan membuat direktori baru bernama praktikum. Perintah cd praktikum memindahkan posisi kerja terminal ke folder tersebut.}
+	\label{fig:gcc-langkah1}
 \end{figure}
 
 \vspace{0.3cm}
-
+\noindent
 \textbf{Langkah 2: Membuat File Program Menggunakan Nano}\\
-\textit{
-Buat file program C menggunakan editor teks dengan perintah nano, lalu isi dengan kode program sederhana. 
-}
-
+\textit{Buat file program C menggunakan editor teks dengan perintah \texttt{nano}, lalu isi dengan kode program sederhana.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt2.png}
-    \includegraphics[width=0.85\textwidth]{Figure/pt2(1).png}
-    \caption{File perkenalan.c berhasil dibuat dan tersimpan di dalam folder praktikum, isi file mencakupi header <stdio.h>, macro PESAN, fungsi main()}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt2.png}
+	\includegraphics[width=0.85\textwidth]{Figure/pt2(1).png}
+	\caption{File perkenalan.c berhasil dibuat dan tersimpan di dalam folder praktikum, isi file mencakupi header <stdio.h>, macro PESAN, fungsi main()}
+	\label{fig:gcc-langkah2}
 \end{figure}
 
 \vspace{0.3cm}
-
+\noindent
 \textbf{Langkah 3: Tahap Processing (-E)}\\
-\textit{
-Menjalankan proses preprocessing untuk menginisialisasi seluruh header dan macro
-}
-
+\textit{Menjalankan proses preprocessing untuk menginisialisasi seluruh header dan macro.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt3.png}
-    \caption{Compiler akan menghasilkan file baru bernama perkenalan.i}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt3.png}
+	\caption{Compiler akan menghasilkan file baru bernama perkenalan.i}
+	\label{fig:gcc-langkah3}
 \end{figure}
 
+\vspace{0.3cm}
+\noindent
 \textbf{Langkah 4: Tahap Compilation Menjadi Assembly (-S)}\\
-\textit{
-Melanjutkan proses kompilasi hingga menghasilkan bahasa assembly dengan perintah berikut:
-}
-
+\textit{Melanjutkan proses kompilasi hingga menghasilkan bahasa assembly dengan perintah berikut:}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt4.png}
-    \caption{Proses ini akan menghasilkan file baru bernama perkenalan.s, dari proses ini menunjukkan bahwa source code C telah diterjemahkan menjadi bahasa yang mendekati bahasa mesin.}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt4.png}
+	\caption{Proses ini akan menghasilkan file baru bernama perkenalan.s, dari proses ini menunjukkan bahwa source code C telah diterjemahkan menjadi bahasa yang mendekati bahasa mesin.}
+	\label{fig:gcc-langkah4}
 \end{figure}
 
+\vspace{0.3cm}
+\noindent
 \textbf{Langkah 5: Tahap Assembly Menjadi Object File (-c)}\\
-\textit{
-Melakukan perubahan file assembly menjadi object file biner. 
-}
-
+\textit{Melakukan perubahan file assembly menjadi object file biner.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt5.png}
-    \caption{Sistem akan otomatis menghasilkan file perkenalan.o, file .o adalah object biner yang berisi kode mesin, tetapi belum bisa dijalankan secara langsung karena belum melalui linking}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt5.png}
+	\caption{Sistem akan otomatis menghasilkan file perkenalan.o, file .o adalah object biner yang berisi kode mesin, tetapi belum bisa dijalankan secara langsung karena belum melalui linking}
+	\label{fig:gcc-langkah5}
 \end{figure}
 
+\vspace{0.3cm}
+\noindent
 \textbf{Langkah 6: Tahap Linking Menjadi Executable}\\
-\textit{
-Menggabungkan object file dengan library internal agar menjadi file yang siap di eksekusi.
-}
-
+\textit{Menggabungkan object file dengan library internal agar menjadi file yang siap di eksekusi.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt6.png}
-    \caption{Dari proses ini akan terbentuk file executable bernama program-perkenalan, file ini merupakan gabungan dari object file perkenalan.o dan library standar C.}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt6.png}
+	\caption{Dari proses ini akan terbentuk file executable bernama program-perkenalan, file ini merupakan gabungan dari object file perkenalan.o dan library standar C.}
+	\label{fig:gcc-langkah6}
 \end{figure}
 
+\vspace{0.3cm}
+\noindent
 \textbf{Langkah 7: Menjalankan Program}\\
-\textit{
-Menjalankan file executable dari direktori saat ini untuk melihat hasil akhir 
-}
-
+\textit{Menjalankan file executable dari direktori saat ini untuk melihat hasil akhir.}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/pt8.png}
-    \caption{Program berhasil dijalankan dan menampilkan output seperti diatas. Hasil ini menunjukin bahwa seluruh proses kompilasi dari source code hingga executable telah berhasil dilakukan.}
-    \label{fig:langkah-2}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/pt8.png}
+	\caption{Program berhasil dijalankan dan menampilkan output seperti diatas. Hasil ini menunjukin bahwa seluruh proses kompilasi dari source code hingga executable telah berhasil dilakukan.}
+	\label{fig:gcc-langkah7}
+\end{figure}
+
+% Sesi 2
+\subsection{Penulisan Makefile Mendasar}
+\label{subsec:langkah-makefile-dasar}
+
+\noindent
+\textbf{Langkah 1: Membuat Direktori Praktikum}\\
+\textit{Pada langkah awal, buka terminal ubuntu lalu buat sebuah direktori baru dengan perintah \texttt{mkdir praktikum-make}, lalu gunakan perintah \texttt{cd praktikum-make} untuk mengakses direktori tersebut.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/sf1.png}
+	\caption{Langkah ini akan menghasilkan direktori baru bernama praktikum-make. Hasil dari langkah ini adalah terbentuknya folder kerja khusus untuk praktikum Makefile sehingga file lebih terstruktur.}
+	\label{fig:mk1-langkah1}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 2: Membuat File Program C}\\
+\textit{Buatlah sebuah file source code dengan perintah \texttt{nano hallo.c} di dalam direktori \texttt{praktikum-make}. Kemudian tulis source code-nya.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/sf2.png}
+	\includegraphics[width=0.85\textwidth]{Figure/sf2(1).png}
+	\caption{Langkah ini akan menghasilkan file sumber yang tersimpan dan nantinya akan dikompilasi menggunakan Makefile.}
+	\label{fig:mk1-langkah2}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 3: Membuat File Makefile}\\
+\textit{Langkah selanjutnya, membuat file \texttt{Makefile} dengan perintah \texttt{nano Makefile}, kemudian menuliskan aturan kompilasi sebagai berikut:}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/sf3.png}
+	\includegraphics[width=0.85\textwidth]{Figure/sf3(1).png}
+	\caption{Hasil dari langkah ini adalah terbentuknya file konfigurasi yang dapat dibaca oleh perintah make.}
+	\label{fig:mk1-langkah3}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 4: Menjalankan Makefile}\\
+\textit{Jalankan \texttt{Makefile} dengan mengeksekusi perintah \texttt{make}.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/sf4.png}
+	\caption{Proses ini menghasilkan file executable bernama program-halo.}
+	\label{fig:mk1-langkah4}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 5: Menjalankan Program Hasil Build}\\
+\textit{Langkah terakhir yaitu dengan menjalankan file \texttt{executable}.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/sf5.png}
+	\caption{Hasil ini menunjukkan bahwa proses build menggunakan Makefile telah berhasil dilakukan dan program dapat dijalankan dengan normal.}
+	\label{fig:mk1-langkah5}
+\end{figure}
+
+% Sesi 3
+\newpage
+\subsection{Target Kompleks dan Penggunaan Variabel Otomatis}
+\label{subsec:langkah-makefile-kompleks}
+
+\noindent
+\textbf{Langkah 1: Membuat File Header, Implementasi matematika.c dan File Program Utama}\\
+\textit{Langkah pertama adalah membuat file header, implementasi, dan file utama menggunakan perintah nano.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h1.png}
+	\caption{Pada proses ini, user menuliskan source code di dalam teks editor pada setiap file lalu menyimpannya.}
+	\label{fig:mk2-langkah1-1}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h1,1.png}
+	\caption{Kode untuk mendeklarasikan fungsi kali().}
+	\label{fig:mk2-langkah1-2}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h1,2.png}
+	\caption{Kode yang mengimplementasikan fungsi kali() untuk melakukan operasi perkalian.}
+	\label{fig:mk2-langkah1-3}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h1,3.png}
+	\caption{Pada file utama ini, fungsi kali dipanggil untuk menghitung hasil perkalian 6 x 7.}
+	\label{fig:mk2-langkah1-4}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 2: Membuat Makefile}\\
+\textit{Selanjutnya membuat file Makefile untuk mengotomatisasi proses kompilasi multi-file.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h2.png}
+	\includegraphics[width=0.85\textwidth]{Figure/h2,1.png}
+	\caption{File Makefile dibuat dan berfungsi untuk mengatur proses build secara otomatis menggunakan variabel target dan dependency.}
+	\label{fig:mk2-langkah2}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 3: Menjalankan Makefile}\\
+\textit{Jalankan Makefile dengan perintah make.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h3.png}
+	\includegraphics[width=0.85\textwidth]{Figure/h4.png}
+	\caption{Proses kompilasi menghasilkan executable yang mengeluarkan output hasil perkalian 6 x 7 = 42.}
+	\label{fig:mk2-langkah3}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 4: Membersihkan File Build}\\
+\textit{Setelah melakukan pengujian, bersihkan file hasil build dengan perintah make clean.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/h5.png}
+	\caption{File hasil kompilasi seperti file .o dan executable akan terhapus, mengembalikan direktori menjadi bersih.}
+	\label{fig:mk2-langkah4}
+\end{figure}
+
+% Sesi 4
+\newpage
+\subsection{Hands-On Kalkulator}
+\label{subsec:langkah-kalkulator}
+
+\noindent
+\textbf{Langkah 1: Membuat File Direktori}\\
+\textit{Buatlah direktori baru dengan perintah \texttt{mkdir tugas-kalkulator} dan masuk kedalam direktori tersebut dengan perintah \texttt{cd tugas-kalkulator}.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO1.png}
+	\caption{Dari langkah ini, hasil yang diperoleh adalah terminal berada di dalam direktori tugas-kalkulator.}
+	\label{fig:ho-langkah1}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 2: Membuat File Header, Implementasi Kalkulator.c dan File Utama}\\
+\textit{Membuat beberapa file yang dibutuhkan menggunakan editor nano.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO2.png}
+	\caption{Perintah ini mengarahkan user ke text editor untuk membuat dan memverifikasi source code dengan cat.}
+	\label{fig:ho-langkah2-1}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(1).png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(1.1).png}
+	\caption{File kalkulator.h digunakan untuk menyimpan deklarasi/prototype fungsi tambah() dan kurang().}
+	\label{fig:ho-langkah2-2}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(2).png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(2.1).png}
+	\caption{File kalkulator.c berfungsi menyimpan implementasi dari fungsi yang dideklarasikan pada header.}
+	\label{fig:ho-langkah2-3}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(3).png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(3.1).png}
+	\caption{Program utama (main) yang akan mengeksekusi operasi matematika.}
+	\label{fig:ho-langkah2-4}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 3: Kompilasi Manual Menjadi File Objek}\\
+\textit{Langkah selanjutnya, file program dikompilasi secara manual menjadi file objek dengan perintah gcc -c.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(3).png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO2(3.1).png}
+	\caption{Flag -c membuat compiler hanya menghasilkan file objek (.o) tanpa membuat executable secara langsung.}
+	\label{fig:ho-langkah3}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 4: Menghubungkan file objek}\\
+\textit{Setelah file objek terbentuk, file digabungkan menjadi file executable melalui proses linking.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO4.png}
+	\caption{Tahap linking menggabungkan beberapa file objek menjadi satu file executable yang siap dijalankan.}
+	\label{fig:ho-langkah4}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 5: Menjalankan Program}\\
+\textit{Program yang telah berhasil di-link dijalankan melalui terminal.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO5.png}
+	\caption{Program dijalankan untuk memastikan fungsi kalkulator bekerja dengan benar.}
+	\label{fig:ho-langkah5}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 6: Menghapus File Hasil Kompilasi}\\
+\textit{Setelah pengujian manual selesai, hapus file kompilasi dengan \texttt{rm} dan verifikasi dengan \texttt{ls}.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO6.png}
+	\caption{Perintah rm digunakan untuk menghapus file objek dan executable agar direktori kembali bersih untuk pengujian Makefile.}
+	\label{fig:ho-langkah6}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 7: Membuat Makefile}\\
+\textit{Untuk mempermudah proses kompilasi di atas, buatlah file Makefile.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO7.png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO7(1).png}
+	\caption{Makefile digunakan untuk mengotomatisasi proses kompilasi multifile.}
+	\label{fig:ho-langkah7}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 8: Kompilasi Otomatis}\\
+\textit{Program dikompilasi secara otomatis hanya dengan menjalankan perintah make.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO8.png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO8(1).png}
+	\caption{Perintah make secara otomatis mengeksekusi resep yang telah didefinisikan.}
+	\label{fig:ho-langkah8}
+\end{figure}
+
+\vspace{0.3cm}
+\noindent
+\textbf{Langkah 9: Membersihkan Direktori}\\
+\textit{Tahap terakhir adalah menguji target clean untuk membersihkan file.}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/HO9.png}
+	\includegraphics[width=0.85\textwidth]{Figure/HO9(1).png}
+	\caption{Target clean menghapus seluruh file output kompilasi, menyisakan hanya source code dan Makefile.}
+	\label{fig:ho-langkah9}
 \end{figure}
 
 % --- 5. Pembahasan ---
 \newpage
 \section{Pembahasan}
 \label{sec:pembahasan}
+Berdasarkan serangkaian percobaan yang telah dilakukan, proses pembangunan perangkat lunak terbukti membutuhkan langkah-langkah yang terstruktur, dimulai dari kompilasi tingkat
+dasar hingga otomatisasi. Pada bagian Sistem Build dengan GCC (merujuk pada Bagian \ref{subsec:langkah-gcc}), terlihat jelas bahwa \textit{source code} bahasa tingkat tinggi
+(seperti \texttt{perkenalan.c}) tidak dapat langsung dieksekusi oleh sistem operasi. Melalui perintah \texttt{gcc} dan tambahan \textit{flag} spesifik (\texttt{-E}, \texttt{-S},
+\texttt{-c}), setiap tahapan kompilasi dapat diobservasi secara mandiri. Mulai dari ekspansi \textit{macro} dan \textit{header} pada tahap \textit{preprocessing}, penerjemahan instruksi
+menjadi representasi \textit{assembly}, konversi menjadi file objek biner, hingga penggabungan file objek dengan library standar pada tahap \textit{linking}. Analisis kompilasi manual
+ini memperlihatkan transparansi bagaimana compiler menerjemahkan logika pemrogram ke bahasa mesin.
 
-\textit{
-Berdasarkan hasil praktikum yang ditunjukan pada langkah 1 hingga langkah 3, proses awal dimulai dengan pembuatan direktori kerja dan file source code perkenalan.c menggunakan editor nano. Tahap ini penting sebagai dasar dalam siklus hidup
-kompilasi bahasa C karena source code merupakan input utama yang akan diproses oleh compiler. Pada tahap processing menggunaka perintah gcc -E, hasil yang terlihat pada langkah 4 menunjukan bahwa directive seperti \#include <stdio.h> dan macro
-\#define PESAN telah diekspansi secara otomatis oleh preprocessor. Hal ini sesuai dengan teori bahwa preprocessing bertugas menangani directive yang diawali simbol \#, termasuk perluasan header file, ekspansi macro, dan penghapusan komentar sebelum memasuki tahap kompilasi utama.
-}
+Namun, ketika masuk ke tahap kompilasi yang lebih kompleks atau melibatkan manipulasi file berulang, melakukan eksekusi perintah GCC secara manual menjadi kurang efisien. Hal ini dijawab
+pada bagian Penulisan Makefile Mendasar (merujuk pada Bagian \ref{subsec:langkah-makefile-dasar}). Terlihat bahwa pembuatan \texttt{Makefile} menyederhanakan interaksi pengguna dengan compiler.
+File \texttt{Makefile} bertindak sebagai aturan (\textit{rule}) yang menghubungkan target hasil akhir dengan prasyarat file utamanya (\textit{dependencies}). Dengan memanggil perintah \texttt{make},
+seluruh prosedur pemanggilan \texttt{gcc} dilakukan oleh sistem berdasarkan konfigurasi di dalam file tersebut. Kendala sintaks seperti penggunaan karakter \texttt{TAB} pada resep juga menjadi
+pembelajaran penting untuk menghindari \textit{error missing separator} yang sangat sering terjadi saat mendefinisikan \textit{recipe} di Makefile.
 
-\textit{
-Selanjutnya, pada gambar langkah 5 dan langkah 6, proses compilation dan assembly menunjukan perubahan representasi program dari bahasa tingkat tinggi ke tingkat rendah. Saat perintah gcc -S perkenalan.c -o perkenalan.s dijalankan, sistem menghasilkan file assembly perkenalan.s yang berisi instruksi mnemonic seperti mov, call, dan ret. Hal ini memberikan
-insight bahwa compiler menerjemahkan logika program C menjadi instruksi yang lebih dekat dengan arstitektur mesin. Setelah itu, perintah gcc -c perkenalkan.c -o perkenalan.o menghasilkan file object perkenalan.o yang merupakan kode biner hasil proses assembly. Sesuai teori, file object belum dapat dijalankan secara langsung karena masih memerlukan proses linking untuk
-menghubungkan referensi fungsi eksternal seperti printf() dengan library C.
-}
-
-\textit{
-Pada tahap akhir yang ditampilkan pada langkah 7, proses linking menggunakan perintah gcc perkenalkan.o -o program-perkenalkan berhasil menghasilkan file executable perkenalkan, yang kemudian dapat dijalankan menggunakan ./program-perkenalkan. Output program yang menampilkan pesan sesuai source code membuktikan bahwa seluruh tahapn kompilasi telah berjalan dengan benar. Dari praktikum
-ini diperoleh pemahaman bahwa setiap tahapan dalam GCC memiliki fungsi yang saling berkaitan, mulai dari preprocessing hingga linking. Salah satu kendala yang dialami adalah kesalahan penulisan sintaks pada teks editor nano,  dan sintaks perintah seperti salah menempatkan flag -E, -S atau -c yang dapat menyebabkan file output tak terbentuk. Cara mengatasinya adalah dengan melakukan pemeriksaan kembali
-sesuai urutan langkah langkah supaya dapat memperbaiki kesalahan.
-}
-
+Otomatisasi tersebut menjadi semakin kokoh saat menangani proyek yang bersifat modular, seperti pada implementasi fungsi matematika dan kalkulator (merujuk pada Bagian \ref{subsec:langkah-makefile-kompleks}
+dan Bagian \ref{subsec:langkah-kalkulator}). Pada kasus ini, kode dibagi menjadi komponen antarmuka program (\textit{header}), implementasi fungsi terpisah (\textit{source file}), dan logika pemanggilan utama
+(\textit{main}). Dalam hal ini, fitur variabel (\textit{compiler flags} seperti \texttt{CC=gcc}) dan variabel otomatis seperti \verb|$@| (merujuk pada target) dan \verb|$^| (merujuk pada dependensi)
+membuat penulisan \texttt{Makefile} jauh lebih ringkas dan dinamis. Proses \textit{dependency tracking} yang dimiliki GNU Make juga terbukti bekerja efisien, memastikan hanya file yang mengalami modifikasi
+yang akan dikompilasi ulang, sekaligus menyediakan target praktis seperti \texttt{make clean} untuk manajemen ruang kerja (\textit{workspace}) yang bersih.
 
 % --- 6. Kesimpulan ---
 \newpage
 \section{Kesimpulan}
 \label{sec:kesimpulan}
 
-\noindent
-\textit{
-Berdasarkan hasil praktikum Sistem Operasi pada minggu ini, dapat disimpulkan bahwa tujuan praktikum telah tercapai dengan cukup baik. Saya berhasil memahami proses kompilasi source code bahasa C menggunakan GNU Compiler Collection (GCC) melalui serangkaian tahapan yang sistematis. Mulai dari tahap preparasi berupa pembuatan souce code, dilanjutkan dengan preprocessing untuk menginisialisasi header dan macro,
-kemudian compilation yang mengubah source code menjadi bahasa assembly, assembly yang menghasilkan object file biner, hingga tahap linking yang menyatukan object file dengan library internal sehingga menghasilkan file executable yang siap dijalankan.
-}
+Berdasarkan hasil praktikum yang telah dilakukan, dapat disimpulkan bahwa proses kompilasi kode sumber C/C++ menggunakan \textit{GNU Compiler Collection} (\texttt{GCC}) telah dipahami melalui praktik langsung.
+Proses kompilasi tidak berlangsung secara tunggal, melainkan melalui beberapa tahapan yang saling berurutan.
 
-\textit{
-Pada praktikum ini juga, saya telah mengenal dan mempraktikan secara langsung setiap tahapan dalam proses build, yaitu preprocessing, compilation assembly, dan linking, beserta fungsi masing-masing tahap. Dari praktikum ni diperoleh pemahaman utama bahwa sebuah program tidak langsung dijalankan dari source code, melainkan harus melalui proses penerjamahan bertahap hingga menjadi kode mesin yang dapat dieksekusi oleh sistem operasi.
-Praktikum ini memberikan insight penting mengenai bagaimana compiler bekerja dibalik layar serta memabntu memperkuat pemahaman konsep dasar sistem operasi dan proses build program.
-}
+Pada praktikum ini juga dipahami bahwa tahapan \textit{build} terdiri dari \textit{preprocessing}, \textit{compiling}, \textit{assembling}, dan \textit{linking}.
+Setiap tahapan tersebut memiliki fungsi masing-masing dalam mengubah kode sumber menjadi program yang dapat dieksekusi.
 
-% --- 7. Lampiran: Bukti Penggunaan AI ---
-\newpage
-\section{Lampiran: Bukti Penggunaan AI}
-\label{sec:lampiran-ai}
+Selain itu, konsep dasar otomatisasi kompilasi (\textit{build automation}) perangkat lunak telah dipahami. Konsep ini memungkinkan proses kompilasi dilakukan secara otomatis sehingga tidak perlu menjalankan
+perintah \texttt{gcc} secara manual berulang kali ketika terjadi perubahan pada program.
 
-\subsection{Identitas Penggunaan AI}
-\label{subsec:ai-info}
+Struktur dasar file \texttt{Makefile} juga telah dipahami, yang terdiri dari \textit{target}, komponen syarat (\textit{dependency}),
+dan resep (\textit{recipe}). Struktur ini digunakan untuk mengatur proses \textit{build} agar lebih terstruktur, otomatis, dan mudah dikelola.
 
-\begin{table}[h]
-\caption{Informasi Alat AI yang Digunakan}
-\label{tab:ai-info}
-\centering
-\begin{tabulary}{\textwidth}{|L|L|}
-\hline
-\textbf{Keterangan}   & \textbf{Isian} \\ \hline
-Nama alat AI          & \textit{(ChatGPT)} \\ \hline
-Versi / Model         & \textit{(GPT-4o)} \\ \hline
-Tanggal penggunaan    & \textit{11-04-2026} \\ \hline
-Tujuan penggunaan     & \textit{Menggunakan AI untuk mencari beberapa refensi dasar teori} \\ \hline
-\end{tabulary}
-\end{table}
+Penggunaan variabel kompilator dan \textit{flags} dalam \texttt{Makefile} telah dipraktikkan. Variabel ini digunakan untuk mempermudah pengaturan perintah
+kompilasi sehingga proses \textit{build} menjadi lebih fleksibel dan mudah disesuaikan.
 
-\subsection{Tangkapan Layar Percakapan AI}
-\label{subsec:ai-screenshot}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/AI1.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/AI2.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/AI3.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/AI4.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
-\end{figure}
-
-\newpage
-\chapter{Otomatisasi Proses Build Makefile}
-
-\section{Pendahuluan}
-
-\subsection{Latar Belakang}
-\textit{
-Dalam pengembangan perangkat lunak, khususnya pada pemrograman bahasa C di lingkungan sistem operasi Linux, proses kompilasi merupakan tahapan penting untuk mengubah source code menjadi file executable yang dapat dijalankan. Proses ini mencakup beberapa tahap, yaitu preprocessing, compilation, assembly, dan linking. Pada program sederhana, proses kompilasi dapat dilakukan secara manual
-menggunakan perintah compiler seperti gcc. Namun, seiring bertambahnya jumlah file sumber dan kompleksitas proyek, proses kompilasi manual menjadi kurang efisien karena pengguna harus menjalankan perintah yang sama secara berulang setiap kali terjadi perubahan pada source code. Oleh karena itu, dibutuhkan suatu mekanisme yang mampu mengotomatisasi proses build agar lebih cepat, konsisten,
-dan meminimalkan kesalahan pengguna. GNU Make menjelaskan bahwa make adalah utilitas yang digunakan untuk mengontrol pembuatan file executable dan file non-source lainnya berdasarkan file sumber program.
-}
-
-\textit{
-Salah satu solusi yang digunakan untuk mengatasi permasalahan tersebut adalah Makefile, yaitu file konfigurasi yang berisi aturan mengenai target, dependensi, dan perintah yang harus dijalankan selama proses build. Dengan menggunakan Makefile, sistem dapat secara otomatis mendeteksi file mana yang mengalami perubahan dan hanya mengompilasi ulang bagian yang diperlukan. Hal ini sangat
-penting dalam proyek perangkat lunak berskala menengah hingga besar karena meningkatkan efisiensi waktu, mempermudah pengelolaan dependensi antar file, serta mendukung proses pengembangan yang lebih terstruktur. Selain itu, konsep otomatisasi build juga menjadi dasar dalam berbagai sistem pengembangan modern seperti continuous integration dan deployment pipeline. Oleh karena itu,
-pemahaman mengenai otomatisasi proses build menggunakan Makefile menjadi materi yang penting dalam praktikum sistem operasi dan pengembangan perangkat lunak.
-}
-
-\subsection{Tujuan}
-\label{subsec:tujuann}
-\begin{enumerate}
-    \item \textit{Memahami konsep dasar otomatisasi kompilasi (build automation) perangkat lunak.}
-    \item \textit{Memahami dan menjelaskan struktur dasar file Makefile (Target, Komponen Syarat, dan Resep).}
-    \item \textit{Menggunakan variabel kompilator dan flags penanda Makefile.}
-    \item Menggunakan variabel otomatis (\textit{automatic variables}) seperti \verb|$@| dan \verb|$^| untuk efisiensi skrip \textit{build}.
-\end{enumerate}
-
-\newpage
-\section{Dasar Teori}
-\textit{
-Otomatisasi proses build merupakan teknik dalam pengembangan perangkat lunak yang digunakan untuk mempermudah proses kompilasi program secara terstruktur dan efisien. Pada bahasa C, proses build umumnya melibatkan empat tahapan utama, yaitu preprocessing, compilation, assembly, dan linking. Menurut dokumentasi resmi GNU Compiler Collection (GCC), keempat tahapan tersebut selalu
-berlangsung secara berurutan hingga menghasilkan file executable yang dapat dijalankan \cite{gcc_overall_options}. Untuk menghindari proses kompilasi manual yang berulang, digunakan utilitas GNU Make dengan file konfigurasi bernama Makefile. GNU Make secara otomatis menentukan file mana yang perlu dikompilasi ulang berdasarkan perubahan pada file sumber dan waktu modifikasinya. Dengan demikian, pengguna
-cukup menjalankan perintah make tanpa harus mengetik ulang perintah compiler setiap kali terjadi perubahan pada source code.
-}
-
-\textit{
-Makefile bekerja berdasarkan aturan yang terdiri atas target, dependency, dan recipe. Target merupakan file output yang ingin dihasilkan, dependency adalah file sumber yang menjadi syarat pembentukan target, sedangkan recipe adalah perintah yang dijalankan untuk menghasilkan target tersebut. Sebagai contoh, aturan program-halo: hello.c menunjukkan bahwa file executable program-halo
-bergantung pada file sumber hello.c. Jika file sumber mengalami perubahan, maka make akan menjalankan perintah kompilasi ulang secara otomatis. Konsep ini dikenal sebagai dependency tracking, yang menjadi salah satu keunggulan utama Makefile dalam proyek pemrograman, terutama pada proyek dengan banyak file sumber \cite{gnu_make_manual}.
-}
-
-\newpage
-\section{Metodologi Praktikum}
-\subsection{Alat dan Bahan}
-\label{sec:alat-bahan}
-
-\begin{enumerate}
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{Laptop/PC}      & \textbf{: Acer Aspire A514-54}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{Sistem Operasi} & \textbf{: Windows 11}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{VirtualBox}     & \textbf{: Versi 7.2.8}
-    \end{tabular}
-
-    \item \begin{tabular}[t]{@{}p{3.5cm} l}
-        \textbf{ISO Ubuntu}     & \textbf{: Versi 24.04 LTS}
-    \end{tabular}
-\end{enumerate}
-
-\subsection{Langkah-Langkah Praktikum}
-\textbf{Langkah 1: Membuat Direktori Praktikum}\\
-\textit{
-Pada langkah awal, buka terminal ubuntu lalu buat sebuah direktori baru dengan perintah mkdir praktikum-make,
-lalu gunakan perintah cd oraktikum-make untuk mengakses direktori tersebut.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/sf1.png}
-    \caption{Langkah ini akan menghasilkan direktori baru bernama praktikum-make. Hasil dari langkah ini adalah terbentuknya folder kerja khusus untuk praktikum Makefile sehingga file lebih terstruktur.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 2: Membuat File Program C}\\
-\textit{
-Buatlah sebuah editor text dengan perintah nano hallo.c didalam direktori praktikum-make. Kemudian tulis source code nya.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/sf2.png}
-    \includegraphics[width=0.85\textwidth]{Figure/sf2(1).png} 
-    \caption{Langkah ini akan menghasilkan file sumber yang tersimpan dan nantinya akan dikompilasi menggunakan Makefile.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 3: Membuat File Makefile}\\
-\textit{
-Langkah selanjutnya, membuat file Makefile dengan perintah nano Makefile, kemudian menuliskan source code sebagai berikut:
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/sf3.png}
-    \includegraphics[width=0.85\textwidth]{Figure/sf3(1).png} 
-    \caption{Hasil dari langkah ini adalah terbentuknya file konfigurasi yang dapat dibaca oleh perintah make.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 4: Menjalankan Makefile}\\
-\textit{
-Jalankan Makefile dengan perintah make.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/sf4.png}
-    \caption{Proses ini menghasilkan file executable bernama program-halo}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 5: Menjalankan Program Hasil Build}\\
-\textit{
-Langkah terakhir yaitu dengan menjalankan file executable
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/sf5.png}
-    \caption{Hasil ini menunjukkan bahwa proses build menggunakan Makefile telah berhasil dilakukan dan program dapat dijalankan dengan normal.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\newpage
-\section{Pembahasan}
-Berdasarkan hasil yang ditunjukkan pada Langkah 1 dan Langkah 2, saya berhasil membuat direktori praktikum-make sebagai folder kerja dan file source code hello.c menggunakan editor nano.
-Langkah ini menunjukkan penerapan konsep dasar manajemen file dan direktori pada sistem operasi Linux, di mana setiap file praktikum ditempatkan pada direktori khusus agar lebih terstruktur dan mudah dikelola. Selain itu, file hello.c
-berfungsi sebagai source code utama yang berisi instruksi program untuk menampilkan teks ke layar. Dari langkah ini, saya memperoleh pemahaman bahwa source code merupakan input utama yang akan diproses pada tahap kompilasi.
-
-Pada Langkah 3 dan Langkah 4, saya membuat file Makefile dan menjalankan perintah make. Hasil yang diperoleh menunjukkan bahwa sistem berhasil membaca aturan yang terdapat pada Makefile,
-kemudian menjalankan perintah kompilasi gcc hello.c -o program-halo secara otomatis. Hal ini sesuai dengan konsep otomatisasi proses build, di mana Makefile digunakan untuk mengatur hubungan antara target, dependency, dan recipe.
-Dengan adanya Makefile, proses kompilasi menjadi lebih efisien karena pengguna tidak perlu mengetik ulang perintah compiler setiap kali source code mengalami perubahan. Insight yang diperoleh dari tahap ini adalah pentingnya otomatisasi
-dalam meningkatkan efisiensi dan konsistensi proses pengembangan perangkat lunak.
-
-Berdasarkan hasil pada Langkah 5, file executable program-halo berhasil dijalankan menggunakan perintah \texttt{./program-halo} dan menghasilkan output sesuai yang diharapkan, yaitu teks “Halo, dunia!”. Hal ini menunjukkan bahwa proses kompilasi dan
-linking telah berhasil dilakukan. Kendala yang umum terjadi pada praktikum ini adalah kesalahan penulisan sintaks pada Makefile, khususnya penggunaan spasi pada baris recipe yang seharusnya diawali dengan karakter TAB. Jika terjadi kesalahan,
-sistem biasanya menampilkan pesan error seperti missing separator. Cara mengatasinya adalah memastikan format penulisan Makefile sesuai aturan. Dari praktikum ini, saya memahami bahwa Makefile sangat membantu dalam mengotomatisasi proses build dan meminimalkan kesalahan manual.
-
-\section{Hands-On}
-\subsection{Langkah-Langkah}
-\textbf{Langkah 1: Membuat File Direktori}\\
-\textit{
-Buatlah direktori baru dengan perintah \texttt{mkdir tugas-kalkulator} dan masuk kedalam direktori tersebut dengan
-perintah \texttt{cd tugas-kalkulator}.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO1.png}
-    \caption{Dari langkah ini, hasil yang diperoleh adalah terminal berada didalam direktori tugas-kalkulator}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 2: Membuat File Header, Implementasi Kalkulator.c dan File Utama }\\
-\textit{
-Membuat beberapa file dengan perintah nano
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO2.png}
-    \caption{Perintah ini akan mengarahkan user ke text editor agar dapat membuat sebuah source code. Simpan source kode dengan CTRL + O, lalu tekan enter, kemudian CTRL + X untuk keluar.
-    Jika sudah, Lakukan verifikasi isi file dengan perintah cat.
-    }
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(1).png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(1.1).png}
-    \caption{File kalkulator.h digunakan untuk menyimpan deklarasi fungsi atau prototype fungsi, yaitu tambah() dan kurang()}
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(2).png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(2.1).png}
-    \caption{File kalkulator.c berfungsi untuk menyimpan isi dari fungsi yang sebelumnya dideklarasikan pada file header.}
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(3).png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(3.1).png}
-    \caption{Ini merupakan program utama yang akan dijalannya pertama kali.}
-\end{figure}
-
-\textbf{Langkah 3: Kompilasi Manual Menjadi File Objek}\\
-\textit{
-Langkah selanjutnya, file program dikompilasi secara manual menjadi file objek dengan perintah berikut:
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(3).png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO2(3.1).png}
-    \caption{Perintah gcc digunakan untuk melakukan kompilasi program C. Flag -c berarti compiler hanya menghasilkan file objek(.o) tanpa membuat executable.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 4: Menghubungkan file objek}\\
-\textit{
-Setelah file objek terbentuk, kedua file digabungkan menjadi file executable.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO4.png}
-    \caption{Tahap ini disebut linking, yaitu menggabungkan beberapa file objek menjadi satu file executable yang dapat dijalankan.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 5: Menjalankan Program}\\
-\textit{
-Program yang telah berhasil digabungkan sebelumnya, kemudian dijalankan melalui terminal.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO5.png}
-    \caption{Program dijalankan untuk memastikan fungsi yang dibuat bekerja dengan benar, dan menghasilkan output yang sesuai.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 6: Menghapus File Hasil Kompilasi}\\
-\textit{
-Setelah pengujian selesai, file hasil kompilasi akan dihapus dan jalankan perinrah ls untuk melakukan verifikasi apakah file kompilasi sudah benar benar terhapus.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO6.png}
-    \caption{Perintah \texttt{rm} digunakan untuk menghapus file objek dan executable agar direktori kembali bersih.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 7: Membuat Makefile}\\
-\textit{
-Untuk mempermudah kompilasi, buatlah sebuah file Makefile.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO7.png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO7(1).png}
-    \caption{Makefile digunakan untuk mengotomatisasi proses kompilasi sehingga pengguna cukup menjalankan perintah make}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 8: Kompilasi Otomatis}\\
-\textit{
-Selanjutnya, program dikompilasi secara otomatis menggunakan Makefile
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO8.png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO8(1).png}
-    \caption{Proses ini menghasilkan file executable bernama program-halo}
-    \label{fig:langkah-2}
-\end{figure}
-
-\textbf{Langkah 9: Membersihkan Direktori}\\
-\textit{
-Tahap terakhir adalah membersihkan file hasil kompilasi.
-}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/HO9.png}
-    \includegraphics[width=0.85\textwidth]{Figure/HO9(1).png}
-    \caption{Target \texttt{clean} digunakan untuk menghapus seluruh file hasil build sehingga hanya file sumber program dan Makefile yang tersisa.}
-    \label{fig:langkah-2}
-\end{figure}
-
-\newpage
-\subsection{Pembahasan}
-
-Pada praktikum ini, proses diawali dengan pembuatan direktori kerja dan file sumber program sebagaimana ditunjukkan pada Langkah 1 hingga Langkah 2. Langkah ini menunjukkan pentingnya pengelolaan file
-pada sistem operasi berbasis Linux, khususnya melalui terminal. Penggunaan perintah seperti \texttt{mkdir}, \texttt{cd}, \texttt{nano}, dan \texttt{cat} merepresentasikan konsep dasar manajemen file dan direktori yang menjadi salah satu
-fungsi utama sistem operasi. Selain itu, pemisahan program ke dalam beberapa file, yaitu file header (\texttt{.h}), file implementasi (\texttt{.c}), dan file utama (\texttt{main}), mencerminkan konsep \textit{modular programming}.
-Pendekatan ini sesuai dengan teori rekayasa perangkat lunak yang menekankan pemisahan deklarasi dan implementasi agar kode lebih terstruktur, mudah dipelihara, dan dapat digunakan kembali.
-
-Pada tahap kompilasi manual yang ditunjukkan pada Langka 4 hingga Langkah 6, diperoleh pemahaman mengenai tahapan \textit{build} program dalam bahasa C, yaitu \textit{compilation} dan \textit{linking}.
-Ketika perintah \texttt{gcc -c} dijalankan, sistem menghasilkan file objek (\texttt{.o}) yang merupakan hasil translasi \textit{source code} ke kode mesin parsial. Selanjutnya, file objek tersebut digabungkan menggunakan \textit{linker}
-menjadi \textit{executable} \texttt{kalkulator-manual}. Hasil yang ditampilkan pada Gambar~\ref{fig:langkah-8} menunjukkan output yang sesuai, yaitu hasil tambah 15 dan hasil kurang 5, sehingga membuktikan bahwa fungsi yang dideklarasikan
-pada file header dan diimplementasikan pada file sumber telah berhasil dipanggil dengan benar. Dari langkah ini, praktikan memperoleh pemahaman bahwa proses kompilasi tidak selalu berlangsung dalam satu tahap, melainkan terdiri atas beberapa
-proses internal yang dapat dilakukan secara manual.
-
-Pada bagian akhir praktikum, sebagaimana terlihat pada Langkah 7 hingga Lngkag 9, penggunaan \texttt{Makefile} memberikan pemahaman tentang otomatisasi proses kompilasi. Konsep ini relevan dengan teori
-\textit{build automation} yang banyak digunakan dalam pengembangan perangkat lunak modern untuk meningkatkan efisiensi kerja. Dengan hanya menjalankan perintah \texttt{make}, seluruh proses kompilasi dapat dilakukan secara otomatis sesuai
-aturan yang telah didefinisikan. Kendala yang umum dialami pada tahap ini adalah kesalahan indentasi pada \texttt{Makefile}, terutama penggunaan spasi yang seharusnya berupa karakter \textit{tab}, yang dapat menyebabkan \textit{error} saat eksekusi.
-Kendala tersebut dapat diatasi dengan memastikan setiap command pada target menggunakan karakter \textit{tab}. Dari hasil ini, praktikan memahami bahwa sistem operasi tidak hanya berperan sebagai pengelola sumber daya, tetapi juga menyediakan
-lingkungan yang mendukung proses \textit{development} melalui \textit{shell}, compiler, dan \textit{automation tools}.
-
-\newpage
-\section{Kesimpulan}
-
-Berdasarkan hasil praktikum yang telah dilakukan, dapat disimpulkan bahwa seluruh tujuan praktikum telah tercapai dengan baik. Saya berhasil memahami konsep dasar \textit{build automation} perangkat lunak melalui proses kompilasi manual dan otomatis
-menggunakan \texttt{Makefile}. Melalui percobaan ini, saya memahami bahwa otomatisasi kompilasi sangat membantu dalam meningkatkan efisiensi proses pembangunan program, terutama ketika suatu program terdiri dari beberapa file sumber yang saling terhubung.
-
-Selain itu, saya juga telah memahami struktur dasar file \texttt{Makefile}, yang terdiri dari \textit{target}, komponen syarat (\textit{dependencies}), dan resep (\textit{command recipe}). Penggunaan variabel seperti \texttt{CC} dan \texttt{CFLAGS} memberikan
-pemahaman mengenai pentingnya penulisan skrip build yang lebih fleksibel dan mudah dikelola. Pemanfaatan \textit{automatic variables} seperti \verb|\$@| dan \verb|\$^| juga memberikan insight bahwa proses kompilasi dapat dibuat lebih ringkas, efisien,
-dan mengurangi pengulangan penulisan perintah.
-
-Secara keseluruhan, praktikum ini memberikan pemahaman utama bahwa \texttt{Makefile} merupakan alat penting dalam pengembangan perangkat lunak untuk mengotomatisasi proses kompilasi, mempermudah pemeliharaan kode, serta meningkatkan produktivitas dalam proses
-\textit{development}. Pengetahuan ini menjadi dasar yang penting untuk pengembangan proyek perangkat lunak yang lebih kompleks di masa mendatang.
+Terakhir, penggunaan \textit{automatic variables} seperti \verb|$@| dan \verb|$^| telah dipahami. Variabel ini sangat membantu
+dalam menyederhanakan penulisan \texttt{Makefile} karena dapat merepresentasikan target dan dependency secara otomatis tanpa perlu ditulis berulang.
 
 \newpage
 \section{Lampiran: Bukti Penggunaan AI}
@@ -575,46 +473,74 @@ Secara keseluruhan, praktikum ini memberikan pemahaman utama bahwa \texttt{Makef
 \label{subsec:ai-info}
 
 \begin{table}[h]
-\caption{Informasi Alat AI yang Digunakan}
-\label{tab:ai-info}
-\centering
-\begin{tabulary}{\textwidth}{|L|L|}
-\hline
-\textbf{Keterangan}   & \textbf{Isian} \\ \hline
-Nama alat AI          & \textit{(ChatGPT)} \\ \hline
-Versi / Model         & \textit{(GPT-4o)} \\ \hline
-Tanggal penggunaan    & \textit{11-04-2026} \\ \hline
-Tujuan penggunaan     & \textit{Menggunakan AI untuk mencari beberapa refensi dasar teori} \\ \hline
-\end{tabulary}
+	\caption{Informasi Alat AI yang Digunakan}
+	\label{tab:ai-info}
+	\centering
+	\begin{tabulary}{\textwidth}{|L|L|}
+		\hline
+		\textbf{Keterangan}   & \textbf{Isian} \\ \hline
+		Nama alat AI          & \textit{(ChatGPT)} \\ \hline
+		Versi / Model         & \textit{(GPT-4o)} \\ \hline
+		Tanggal penggunaan    & \textit{11-04-2026} \\ \hline
+		Tujuan penggunaan     & \textit{Menggunakan AI untuk mencari beberapa referensi dasar teori} \\ \hline
+	\end{tabulary}
 \end{table}
 
 \subsection{Tangkapan Layar Percakapan AI}
 \label{subsec:ai-screenshot}
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/1.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/1.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+	\label{fig:ai-screenshot-1}
 \end{figure}
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/2.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/2.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+	\label{fig:ai-screenshot-2}
 \end{figure}
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/3.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/3.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+	\label{fig:ai-screenshot-3}
 \end{figure}
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figure/4.png}
-    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
-    \label{fig:ai-screenshot-1}
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/4.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+	\label{fig:ai-screenshot-4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/AI1.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 2}
+	\label{fig:ai-screenshot-4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/AI2.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 2}
+	\label{fig:ai-screenshot-4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/AI3.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 2}
+	\label{fig:ai-screenshot-4}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figure/AI4.png}
+	\caption{Tangkapan Layar Percakapan AI --- Sesi 2}
+	\label{fig:ai-screenshot-4}
 \end{figure}
