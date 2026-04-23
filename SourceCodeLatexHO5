@@ -163,13 +163,13 @@
 
             \begin{enumerate}[label=(\alph*)]
             \item \textbf{Jelaskan apa yang dilakukan operasi bitwise \texttt{esp \& \textasciitilde(PGSIZE - 1)} dan mengapa hasilnya selalu merupakan alamat awal page.} \\
-			[isi]
+			isi
 
             \item \textbf{Mengapa teknik ini hanya benar jika \texttt{struct thread} selalu berada di offset 0 dari halamannya? Apa dampaknya jika \texttt{initial\_thread\_page} di \texttt{boot.asm} tidak di-align ke 4096 byte?} \\
-			[isi]
+			isi
 
             \item \textbf{Apa fungsi \texttt{THREAD\_MAGIC} dan bagaimana \texttt{thread\_current()} menggunakannya untuk mendeteksi stack overflow?} \\
-			[isi]
+			isi
 
             \end{enumerate}
     \end{itemize}
@@ -202,21 +202,21 @@
         Saat thread baru pertama kali dijadwalkan melalui \texttt{switch\_threads()}, jelaskan secara berurutan apa yang terjadi mulai dari \texttt{switch\_entry} hingga fungsi thread (func\_a, func\_b, atau func\_c) benar-benar mulai berjalan.
 
         \textbf{Jawaban:}\\
-		[isi]
+		isi
 
         \item \textbf{Tulis implementasi \texttt{thread\_create()}.}\\
-
+			\begin{figure}[H]
             \centering
             \includegraphics[width=0.85\textwidth]{Figure/ss4.png}
             \caption{Implementasi \texttt{thread\_create()}}
             \label{fig:langkah-4}
-        \end{figure}
+        	\end{figure}
 
 
         \item \textbf{Penanganan kegagalan alokasi.}
         Kapan \texttt{allocate\_thread\_page()} dapat mengembalikan NULL, dan bagaimana \texttt{thread\_create()} harus menanganinya?\\
         \textbf{Jawaban:}\\
-		[isi]
+		isi
 
     \end{itemize}
 
@@ -273,12 +273,12 @@
             \item \textbf{Mengapa mengembalikan \texttt{initial\_thread}, bukan NULL?}\\
             Jelaskan apa yang akan terjadi pada fungsi \textit{schedule()} jika \texttt{next\_thread\_to\_run()} mengembalikan NULL saat antrian kosong.\\
             \textbf{Jawaban:}\\
-			[isi]
+			isi
 
             \item \textbf{\texttt{thread\_block()} vs \texttt{thread\_yield()} diakhir \texttt{kernel\_main}.}
             Jelaskan perbedaan perilaku kedua fungsi tersebut setelah Thread A, B, dan C berhasil dibuat, dan mengapa \texttt{thread\_block()} adalah pilihan yang benar.\\
             \textbf{Jawaban:}\\
-			[isi]
+			isi
 
             \end{itemize}
 \end{enumerate}
@@ -312,12 +312,12 @@
         \end{figure}
         Apakah urutan Thread A $\rightarrow$ Thread B $\rightarrow$ Thread C $\rightarrow$ Thread A $\rightarrow \dots$ terjaga secara konsisten pada hasil Anda? Jelaskan mengapa urutan ini dapat dijamin oleh implementasi FIFO pada \textit{ready queue}.\\
         \textbf{Jawaban:}\\
-		[isi]
+		isi
 
     \item \textbf{Analisis warning compiler sebelum dan setelah implementasi.}
     Apakah \textit{warning} \texttt{unused-function} dan \texttt{unused-variable} yang muncul sebelum implementasi masih ada setelah Anda mengimplementasikan ketiga fungsi? Jelaskan mengapa \textit{warning} tersebut hilang.\\
     \textbf{Jawaban:}\\
-	[isi]
+	isi
 
 \end{enumerate}
 
@@ -352,7 +352,7 @@
 
             \item {Berapa nilai MAX\_THREADS saat ini? Apa yang terjadi jika Anda membuat thread melebihi batas tersebut? Tunjukkan dengan percobaan dan sertakan bukti.}\\
             \textbf{Jawaban:}\\
-			[isi]
+			isi
 
         \end{enumerate}
 
@@ -375,17 +375,17 @@
         \textbf{Pertanyaan:}\\
         Amati apakah Thread B Thread C dan Thread D tetap berjalan setelah Thread A selesai, lalu jelaskan peran \texttt{thread\_exit()} dalam skenario ini.\\
         \textbf{Jawaban:}\\
-		[isi]
+		isi
 
     Sistem IF-OS saat ini menggunakan \textit{cooperative scheduling} di mana thread hanya berganti saat secara sadar memanggil \texttt{thread\_yield()}.
         \begin{enumerate}[label=(\alph*)]
             \item \textbf{Apa kelemahan utama cooperative scheduling dibandingkan preemptive scheduling? Berikan contoh skenario nyata di mana kelemahan ini berbahaya.}\\
             \textbf{Jawaban:}\\
-			[isi]
+			isi
 
             \item \textbf{Komponen perangkat keras apa yang perlu ditambahkan agar kernel dapat memaksa pergantian thread secara otomatis tanpa bergantung pada kepatuhan thread itu sendiri?}\\
             \textbf{Jawaban:}\\
-			[isi]
+			isi
 
         \end{enumerate}
 
