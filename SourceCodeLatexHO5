@@ -1,1 +1,680 @@
+% ============================================================
+%  Hands-On X — [Judul Praktikum]
+% ============================================================
 
+\chapter{Implementasi Multi-threading}
+\label{chap:handson-x}
+
+% --- 1. Pendahuluan ---
+\section{Pendahuluan}
+\label{sec:pendahuluan}
+
+\subsection{Latar Belakang}
+\label{subsec:latar-belakang}
+
+Sistem operasi memiliki peran dalam mengatur eksekusi program melalui manajemen proses dan thread,
+termasuk penjadwalan CPU dan pengelolaan sumber daya. Konsep seperti \textit{multi-threading}, \textit{scheduling},
+dan \textit{context switching} digunakan untuk memastikan beberapa thread dapat berjalan secara efisien dalam satu
+waktu dengan memanfaatkan CPU secara optimal.
+
+Saya melihat bahwa pemahaman konsep tersebut tidak cukup jika hanya dipelajari secara teori.
+Praktikum ini penting dilakukan agar saya dapat memahami secara langsung bagaimana sistem operasi
+mengelola thread di tingkat kernel, khususnya dalam proses perpindahan eksekusi dan penyimpanan konteks CPU.
+
+Dengan adanya praktikum ini, saya dapat menghubungkan antara konsep dan implementasi,
+sehingga pemahaman terhadap mekanisme kerja sistem operasi menjadi lebih jelas dan tidak bersifat abstrak.
+
+\newpage
+\subsection{Tujuan}
+\label{subsec:tujuan}
+\begin{enumerate}
+    \item \textit{Memahami arsitektur perangkat lunak dalam manajemen thread (termasuk abstraksi Thread Control Block) dan algoritma penjadwalan (scheduling) pada tingkat inti sistem operasi (kernel-level).}
+    \item \textit{Mempraktikkan implementasi logika Context Switching untuk memfasilitasi eksekusi multi-threading melalui penyimpanan dan pemuatan status register CPU (memanfaatkan manipulasi bahasa tingkat rendah/Assembly).}
+\end{enumerate}
+
+% --- 2. Dasar Teori ---
+\newpage
+\section{Dasar Teori}
+\label{sec:dasar-teori}
+
+Multi-threading merupakan teknik dalam sistem operasi yang memungkinkan sebuah proses menjalankan beberapa thread secara bersamaan. Setiap thread dapat dieksekusi secara independen namun tetap berbagi sumber
+daya dalam satu proses yang sama, sehingga meningkatkan efisiensi penggunaan CPU dan responsivitas sistem, terutama pada lingkungan multi-core\cite{GeeksforGeeksMultithreading}.
+
+Thread dalam sistem operasi adalah unit eksekusi terkecil yang memiliki komponen seperti program counter, register, dan stack sendiri, tetapi tetap berbagi memori dengan thread lain dalam satu proses.
+Informasi terkait thread ini disimpan dalam struktur data seperti \textit{Thread Control Block} yang digunakan oleh sistem operasi untuk mengelola status dan konteks eksekusi thread\cite{GeeksforGeeksThread}.
+
+Context switching merupakan mekanisme yang digunakan sistem operasi untuk berpindah dari satu thread ke thread lainnya. Proses ini dilakukan dengan menyimpan kondisi atau konteks thread yang sedang berjalan,
+seperti isi register CPU, kemudian memuat kembali konteks thread berikutnya agar eksekusi dapat dilanjutkan tanpa kehilangan state sebelumnya\cite{StackOverflowContextSwitch}.
+
+
+% --- 3. Alat dan Bahan ---
+\newpage
+\section{Alat dan Bahan}
+\label{sec:alat-bahan}
+
+\begin{itemize}
+	\item \textbf{Perangkat Keras:} Laptop/PC (Acer Aspire A514-54)
+	\item \textbf{Sistem Operasi Host:} Windows 11
+	\item \textbf{Perangkat Lunak Virtualisasi:} VirtualBox Versi 7.2.8
+	\item \textbf{Sistem Operasi Guest:} ISO Ubuntu Versi 24.04 LTS
+	\item \textbf{Paket kode dasar praktikum (Starter Code OS 32-bit) yang dikloning/diunduh dari repositori GitHub: \url{https://github.com/Aziz097/starter-code-os32}.}
+\end{itemize}
+
+% --- 4. Langkah-Langkah Praktikum ---
+\newpage
+\section{Langkah-Langkah Praktikum}
+\label{sec:langkah}
+
+\subsection{Sesi 1 - Persiapan Lingkungan Kerja}
+\noindent
+\textbf{Langkah 1: Masuk ke Container Docker}\\
+Langkah pertama setelah berhasil melakukan instalasi docker dengan perintah \texttt{sudo apt install -y docker.io} dan menginstall dependensasi cross-compile x86 serta QEMU dengan perintah
+\texttt{sudo apt install -y build-essential gcc-multilib nasm} dan \texttt{sudo apt install -y qemu-system-x86 grub-pc-bin xorriso}. Langkah selanjutnya menjalankan perintah berikut \texttt{docker run --rm -it -v /home/\$USER/starter-code-}
+\texttt{os32:/workspace sinanonym/ifos-env} di terminal, lalu masuk ke dalam direktori workspace.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ss1.png}
+    \caption{Menjalankan perintah untuk masuk ke dalam container dan masuk ke workspace}
+    \label{fig:langkah-1}
+\end{figure}
+Selanjutnya jangan lupa untuk melakukan clone diterminal untuk mengakses file yang sudah diberikan dengan perintah \texttt{git clone https://github.com/Aziz097/starter-code-os32} jika berhasil, baru lanjut ke langkah berikutnya.
+
+\vspace{0.3cm}
+
+\textbf{Langkah 2: Compile starter code sebelum implementasi}\\
+Jika suda berada didalam workspace, selanjutnya menjalankan perintah \texttt{make clean \&\& make} untuk mem-build ulang program dari awal secara bersih
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ss2.png}
+    \caption{Menjalankan perintah \texttt{make clean \&\& make}}
+    \label{fig:langkah-2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ss2(1).png}
+    \caption{Menjalankan perintah \texttt{make clean \&\& make}}
+    \label{fig:langkah-1.2}
+\end{figure}
+
+Warning yang muncul pada layar terminal saat proses kompilasi awal adalah \texttt{Wunused-parameter, Wreturn-type, Wunused-function} dan \texttt{Wunused-variable.}
+Semua warning ini muncul karena \textit{source code} saat ini masih berupa \textit{stub} (kerangka awal) yang sudah dipersiapkan untuk praktikum dan belum kita berikan logika
+implementasinya. \texttt{Wunused-parameter} ada karena terdapat argumen/parameter yang dimasukkan ke dalam deklarasi dan dibuat di dalam file, tetapi fungsi tersebut belum pernah
+dipanggil atau digunakan di baris kode manapun. \texttt{Wreturn-type} ada karena terdapat fungsi yang tipe datanya itu memiliki nilai kembalian (bukan \texttt{void}, misalnya harus me-return
+\texttt{tid\_t} atau \texttt{struct thread *}, tetapi karena isinya masih kosong, belum ada instruksi return yang mengembalikan nilai pada akhir fungsi). \texttt{Wunused-function} ada karena terdapat sebuah fungsi pembantu yang sudah dideklarasikan
+dan dibuat didalam file, tetapi fungsi tersebut belum pernah dipanggil atau digunakan dibaris kode mana pun. Lalu \texttt{Wunused-variable} ada karena terdapat sebuah variabel yang sudah terlanjur dideklarasikan di dalam blok fungsi,
+namun hingga fungsi tersebut berakhir, variabel itu tidak pernah dibaca, diisi, atau dioperasikan sama sekali.
+
+\textbf{Langkah 3: Jalankan QEMU sebelum implementasi}\\
+Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perintah \texttt{make run} untuk melihat hasilnya
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ss3.png}
+    \caption{Hasil pada layar QEMU yang dijalankan dari perintah \texttt{make run}}
+    \label{fig:langkah-1.4}
+\end{figure}
+
+Sistem akan mengalami kondisi hang atau freeze dan tidak menampilkan output dari Thread A, B, maupun C karena beberapa fungsi penting dalam siklus hidup thread, seperti \texttt{thread\_create()},
+\texttt{thread\_yield()}, dan mekanisme antrean penjadwalan (ready queue), belum diimplementasikan dengan benar. Secara khusus, \texttt{thread\_create()} belum berhasil membuat \textit{Thread Control Block} (TCB)
+dan memasukkan thread ke dalam ready queue, sehingga scheduler tidak mendeteksi adanya thread yang siap dijalankan. Di sisi lain, \texttt{thread\_yield()} juga belum berfungsi optimal untuk melakukan pergantian eksekusi antar thread. Akibatnya, sistem hanya menjalankan thread
+idle secara terus-menerus dalam \textit{infinite loop}, sehingga tidak ada output yang dihasilkan.
+
+\newpage
+\subsection{Sesi 2 - Implementasi \texttt{thread\_create()}}
+\noindent
+
+\begin {enumerate}
+    \item \textbf{Thread Control Block dan Layout Memori}
+
+    \begin{itemize}
+        \item \textbf{Field-field \texttt{struct thread}.}
+
+        \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|p{7cm}|}
+        \hline
+        \textbf{Field} & \textbf{Tipe Data} & \textbf{Fungsi} \\
+        \hline
+        tid & \texttt{tid\_t} & Menyimpan ID numerik unik untuk mengidentifikasi setiap thread. \\
+        \hline
+        status & \texttt{enum thread\_status} & Menyimpan kondisi status thread saat ini (misalnya RUNNING, READY, BLOCKED). \\
+        \hline
+        name & \texttt{char[16]} & Menyimpan nama string thread (maksimal 16 karakter) untuk mempermudah debugging. \\
+        \hline
+        stack & \texttt{uint8\_t *} & Pointer ke alamat memori puncak stack yang digunakan oleh thread. \\
+        \hline
+        priority & \texttt{int} & Menentukan tingkat prioritas thread untuk kebutuhan penjadwal (scheduler). \\
+        \hline
+        magic & \texttt{unsigned} & Menyimpan angka validasi khusus (magic number) untuk mendeteksi stack overflow. \\
+        \hline
+        \end{tabular}
+        \caption{Field-field pada struct thread}
+        \label{tab:struct_thread}
+        \end{table}
+
+        \newpage
+        \item \textbf{Layout halaman 4 KB miliki sebuah thread.}
+
+        \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|p{9cm}|}
+        \hline
+        \textbf{Offset (Relatif)} & \textbf{Isi} \\
+        \hline
+        +4096 & ESP awal (puncak halaman memori / bottom of stack). \\
+        \hline
+        $\downarrow$ & \texttt{switch\_threads\_frame} (berisi register callee-saved: EBP, EBX, ESI, EDI). \\
+        \hline
+        $\downarrow$ & \texttt{switch\_entry\_frame} (berisi alamat \texttt{switch\_entry}). \\
+        \hline
+        $\downarrow$ & \texttt{kernel\_thread\_frame} (berisi parameter EIP, fungsi utama, dan argumen \textit{aux}). \\
+        \hline
+        (tengah) & Area stack kosong yang bebas digunakan dan akan terus tumbuh ke arah bawah mendekati 0. \\
+        \hline
+        +0 & \texttt{struct thread} (TCB / \textit{Thread Control Block} berada di dasar halaman). \\
+        \hline
+        \end{tabular}
+        \caption{Layout memori stack thread dalam satu halaman}
+        \label{tab:memori}
+        \end{table}
+
+        \item \textbf{Analisis fungsi \texttt{running\_thread}}
+        Perhatikan potongan kode berikut:
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Figure/h1.png}
+        \caption{Implementasi \texttt{running\_thread()} di \texttt{src/thread\.c}}
+        \label{fig:analisis_1}
+        \end{figure}
+
+            \begin{enumerate}[label=(\alph*)]
+            \item \textbf{Jelaskan apa yang dilakukan operasi bitwise \texttt{esp \& \textasciitilde(PGSIZE - 1)} dan mengapa hasilnya selalu merupakan alamat awal page.} \\
+            Operasi ini digunakan untuk mendapatkan alamat awal dari sebuah page memori. Nilai \texttt{PGSIZE} umumnya adalah 4096 byte (0x1000), sehingga \texttt{PGSIZE - 1} menjadi 0xFFF.
+            Ketika dilakukan operasi NOT (\texttt{\~}), hasilnya menjadi 0xFFFFF000. Saat nilai ini di-AND dengan register \texttt{ESP}, maka 12 bit terakhir dari alamat akan diubah menjadi nol.
+            Akibatnya, nilai \texttt{ESP} dibulatkan ke bawah ke kelipatan 4096 terdekat, yang merupakan alamat awal dari page memori 4KB tersebut.
+
+            \item \textbf{Mengapa teknik ini hanya benar jika \texttt{struct thread} selalu berada di offset 0 dari halamannya? Apa dampaknya jika \texttt{initial\_thread\_page} di \texttt{boot.asm} tidak di-align ke 4096 byte?} \\
+            Teknik ini bekerja dengan asumsi bahwa \texttt{struct thread} berada tepat di awal page (offset 0). Jika tidak, maka hasil masking tidak akan menunjuk ke lokasi struktur yang benar,
+            sehingga sistem bisa salah membaca data. Selain itu, jika \texttt{initial\_thread\_page} di \textit{boot.asm} tidak di-align ke 4096 byte, maka alamat dasar page akan meleset.
+            Hal ini bisa menyebabkan kernel membaca data yang tidak valid sebagai \texttt{struct thread}, yang berpotensi menimbulkan error serius seperti \textit{kernel panic}.
+
+            \item \textbf{Apa fungsi \texttt{THREAD\_MAGIC} dan bagaimana \texttt{thread\_current()} menggunakannya untuk mendeteksi stack overflow?} \\
+            \texttt{THREAD\_MAGIC} adalah nilai khusus yang digunakan sebagai penanda untuk mengecek apakah terjadi kerusakan pada memori thread. Nilai ini disimpan di bagian bawah \textit{struct thread}.
+            Karena stack tumbuh ke bawah, jika penggunaan stack berlebihan, maka stack bisa menimpa area tersebut. Fungsi \texttt{thread\_current()} akan memeriksa apakah nilai \texttt{THREAD\_MAGIC} masih sesuai.
+            Jika nilainya berubah, berarti terjadi kerusakan akibat \textit{stack overflow}, dan sistem akan mendeteksinya untuk mencegah masalah yang lebih serius.
+            \end{enumerate}
+    \end{itemize}
+
+    \newpage
+    \item \textbf{Implementasi Frame Pada \texttt{thread\_create}}
+    
+    \begin{itemize}
+        \item \textbf{Tiga stack fram pada \texttt{thread\_create()}}
+            \begin{table}[h]
+            \centering
+            \renewcommand{\arraystretch}{1.3}
+            \begin{tabular}{|c|l|l|p{3.5cm}|}
+            \hline
+            \textbf{Urutan Push} & \textbf{Nama Frame} & \textbf{Field Penting} & \textbf{Nilai yang Diisi} \\
+            \hline
+            Paling atas (1) & kernel\_thread\_frame & eip, function, aux &
+            eip diisi NULL, function diisi pointer fungsi target, aux diisi argumen fungsi. \\
+            \hline
+            Tengah (2) & switch\_entry\_frame & eip &
+            eip diisi alamat fungsi \texttt{kernel\_thread}. \\
+            \hline
+            Paling bawah (3) & switch\_threads\_frame & eip, register callee-saved &
+            eip diisi \texttt{switch\_entry}, register EBP, EBX, ESI, EDI diisi 0, serta \texttt{cur\_dummy} dan \texttt{next\_dummy} diisi NULL. \\
+            \hline
+            \end{tabular}
+            \caption{Urutan stack frame pada pembuatan thread}
+            \label{tab:stack_frame}
+            \end{table}
+
+        \newpage
+        \item \textbf{Alur eksekusi pertama thread baru.}\\
+        Saat thread baru pertama kali dijadwalkan melalui \texttt{switch\_threads()}, jelaskan secara berurutan apa yang terjadi mulai dari \texttt{switch\_entry} hingga fungsi thread (func\_a, func\_b, atau func\_c) benar-benar mulai berjalan.
+
+        \textbf{Jawaban:}\\
+        Saat \texttt{switch\_threads()} dipanggil, konteks CPU akan beralih ke \textit{stack thread} baru. Karena instruksi
+        terakhirnya adalah pengembalian \textit{(return)}, CPU akan mengembalikan nilai \texttt{eip} dari \texttt{switch\_threads\_frame} (yaitu \texttt{switch\_entry}).
+        Fungsi \texttt{switch\_entry} (dalam bahasa assembly) kemudian dieksekusi, lalu di \textit{return} nilai \texttt{eip} dari \texttt{switch\_threads\_frame}
+        (yaitu menuju \texttt{kernel\_thread}). Fungsi \texttt{kernel\_thread} kemudian mengatus pembaruan, mengaktifkan interupsi dan pada akhirnya memanggil fungsi aktual
+        (seperti \texttt{func\_a},\texttt{func\_b}) menggunakan parameter \texttt{function} dan \texttt{aux} yang ada di \texttt{kernel\_thread\_frame}.
+
+        \item \textbf{Tulis implementasi \texttt{thread\_create()}.}\\
+        Untuk melakukan implementasi \texttt{thread\_create()}, pastikan anda sedang berada didalam direktori \texttt{starter-code-os32} menggunakan perintah \texttt{cd starter-code-os32/src} kemudian gunakan perintah \texttt{nano thread.c} untuk menuliskan
+        source code atau mengimplementasikan \texttt{thread\_create()}, jika tempat untuk mengimplementasikan sudah ditemukan, langkah selanjutnya menulisnya \textit{source code} seperti dibawah ini.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.85\textwidth]{Figure/ss4.png}
+            \caption{Implementasi \texttt{thread\_create()}}
+            \label{fig:langkah-4}
+        \end{figure}
+        Tekan CTRL + O lalu enter untuk meyimpan perubahan kemudian CTRL + X untuk keluar dari teks editor.
+
+        \item \textbf{Penanganan kegagalan alokasi.}
+        Kapan \texttt{allocate\_thread\_page()} dapat mengembalikan NULL, dan bagaimana \texttt{thread\_create()} harus menanganinya?\\
+        \textbf{Jawaban:}\\
+        Fungsi \texttt{allocate\_thread\_page()} akan menghasilkan nilai balik \texttt{NULL} ketika sistem mengalami kegagalan alokasi memori fisik (RAM) untuk halaman baru sebesar 4 KB. Kondisi tersebut diantisipasi dalam \texttt{thread\_create()}
+        melalui instruksi \texttt{if (!t) return TID\_ERROR;}. Mekanisme pengecekan ini berfungsi untuk menghentikan eksekusi secara prematur dan mengembalikan kode kesalahan, sehingga mencegah terjadinya operasi \textit{dereference} pada alamat
+        \texttt{NULL} yang berisiko memicu kegagalan sistem fatal seperti \textit{Page Fault} atau \textit{kernel panic}.
+
+    \end{itemize}
+
+\end{enumerate}
+
+\subsection{Sesi 3: Implementasi Cooperative Round-Robin}
+\begin{enumerate}
+    \item \textbf{Konsep Status Thread}
+        \begin{itemize}
+            \item \textbf{Perbedaan \texttt{THREAD\_READY} dan \texttt{THREAD\_BLOCKED}.}
+            \begin{table}[h]
+            \centering
+            \renewcommand{\arraystretch}{1.3}
+            \begin{tabular}{|p{3cm}|p{6cm}|p{6cm}|}
+            \hline
+            \textbf{Aspek} & \textbf{THREAD\_READY} & \textbf{THREAD\_BLOCKED} \\ \hline
+
+            Siapa yang menetapkan? & 
+            Fungsi penjadwal menetapkan status ini saat membuat thread baru melalui thread\_unblock atau ketika thread memanggil thread\_yield. & 
+            Sistem menetapkan status ini ketika thread melakukan penundaan, misalnya saat menunggu I/O atau memanggil thread\_block. \\ \hline
+
+            Masuk ke ready queue? & 
+            Thread akan dimasukkan ke dalam ready\_queue sehingga siap untuk dijadwalkan oleh CPU. & 
+            Thread tidak berada dalam ready\_queue karena sedang menunggu suatu kejadian tertentu. \\ \hline
+
+            Cara kembali ke RUNNING & 
+            Thread akan dipilih secara otomatis oleh fungsi next\_thread\_to\_run ketika tiba gilirannya untuk dieksekusi. & 
+            Thread harus di-unblock terlebih dahulu oleh sistem atau interupsi sebelum dapat kembali ke status READY. \\ \hline
+
+            Contoh penggunaan & 
+            Thread berada dalam kondisi menunggu giliran untuk menggunakan CPU. & 
+            Thread berhenti sementara karena menunggu input dari pengguna seperti keyboard atau operasi I/O lainnya. \\ \hline
+
+            \end{tabular}
+            \caption{Perbandingan THREAD\_READY dan THREAD\_BLOCKED}
+            \end{table}
+        \end{itemize}
+
+    \newpage
+    \item \textbf{Implementasi Fungsi \textit{Scheduling}}
+        \begin{itemize}
+            \item \textbf{Tulis implementasi \texttt{thread\_yield(void)}.}\\
+            Pada langkah ini, sama seperti mengimplementasikan \texttt{thread\_create()}, pastikan anda berada pada halaman terminal dan berada di dalam direktori \texttt{starter-code-os32/src}, jika belum berada didalam
+            di dalam direktori, silahkan akses menggunakan perintah \texttt{starter-code-os32/src} jika sudah, selanjutnya masuk ke teks editor dengan perintah \texttt{nano thread.c}, di dalam teks editor cari fungsi
+            \texttt{thread\_yield(void)} dan \texttt{*next\_thread\_to\_run()} kemudian implementasikan kode dibawah ini.
+                \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.85\textwidth]{Figure/ss5.png}
+                \caption{Implementasi \texttt{thread\_yield()}}
+                \label{fig:langkah-5}
+                \end{figure}
+            \item \textbf{Tulis implementasi \texttt{*next\_thread\_to\_run()} (Round-Robin FIFO)}
+                \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.85\textwidth]{Figure/ss6.png}
+                \caption{Implementasi \texttt{*next\_thread\_to\_run()}}
+                \label{fig:langkah-6}
+                \end{figure}
+            Tekan CTRL + O lalu enter untuk meyimpan perubahan kemudian CTRL + X untuk keluar dari teks editor.
+            \item \textbf{Mengapa mengembalikan \texttt{initial\_thread}, bukan NULL?}\\
+            Jelaskan apa yang akan terjadi pada fungsi \textit{schedule()} jika \texttt{next\_thread\_to\_run()} mengembalikan NULL saat antrian kosong.\\
+            \textbf{Jawaban:}\\
+                Secara fundamental, CPU tidak dapat berada dalam kondisi vakum atau benar-benar berhenti menjalankan instruksi. Oleh karena itu, sistem operasi memerlukan \textit{idle thread}
+                (dalam hal ini diwakili oleh \texttt{initial\_thread}) sebagai penampung eksekusi saat tidak ada tugas lain dalam antrean. Jika fungsi penjadwalan mengembalikan nilai \texttt{NULL},
+                mekanisme \textit{context switching} pada fungsi \texttt{schedule()} akan mencoba melakukan dereferensi pointer ke alamat memori \texttt{0x0}. Operasi ilegal tersebut secara otomatis
+                memicu pengecualian perangkat keras berupa \textit{Page Fault}, yang mengakibatkan kegagalan sistem fatal (\textit{kernel panic}) dan penghentian seluruh operasional sistem operasi seketika.
+            \item \textbf{\texttt{thread\_block()} vs \texttt{thread\_yield()} diakhir \texttt{kernel\_main}.}
+            Jelaskan perbedaan perilaku kedua fungsi tersebut setelah Thread A, B, dan C berhasil dibuat, dan mengapa \texttt{thread\_block()} adalah pilihan yang benar.\\
+            \textbf{Jawaban:}\\
+                Jadi Apabila \texttt{kernel\_main} (sebagai \texttt{initial\_thread}) menggunakan instruksi \texttt{thread\_yield()}, thread tersebut akan terdaftar dalam \texttt{ready\_queue}
+                dan terus mendapatkan alokasi waktu eksekusi secara bergantian bersama thread lainnya. Kondisi ini menyebabkan inefisiensi berupa pemborosan siklus CPU (\textit{wasting CPU cycles})
+                pada proses yang sudah tidak memiliki tugas aktif. Dengan beralih menggunakan \texttt{thread\_block()}, \texttt{initial\_thread} akan dikeluarkan secara eksplisit dari antrean penjadwalan
+                dan memasuki status \textit{blocked}. Mekanisme ini memastikan bahwa seluruh sumber daya pemrosesan dapat dialokasikan sepenuhnya untuk mengeksekusi thread pekerja (A, B, dan C)
+                tanpa terbagi oleh \textit{overhead} dari thread utama.
+            \end{itemize}
+\end{enumerate}
+
+\newpage
+\subsection{Sesi 4: Kompilasi dan Pengujian QEMU}
+\begin{enumerate}
+    \item \textbf{Melakukan kompilasi ulang setelah implementasi selesai}\\
+    Untuk melakukan kompilasi ulang setelah semua implementasi selesai adalah dengan menggunakan perintah \texttt{docker run --rm -it -v
+    /home/\$USER/starter-code-os32:/ sinanonym/ifos-env} , jika sudah masuk ke dalam container docker kembali, langkah selanjutnya melakukan kompilasi ulang
+    dengan perintah \texttt{make clean \&\& make}.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.85\textwidth]{Figure/q1.png}
+            \caption{Kompilasi ulang dengan perintah \texttt{make clean \&\& make}}
+            \label{fig:langkah-q1}
+        \end{figure}
+        Jika sudah, silahkan lanjutkan dengan perintah \texttt{make run} untuk menampilkan layar QEMU.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.85\textwidth]{Figure/q3.png}
+            \caption{Menampilkan QEMU setelah implementasi berhasil}
+            \label{fig:langkah-1.7}
+        \end{figure}
+        Hasil yang ditampilan layar QEMU seperti gambar diatas, dimana keluaran yang dihasilkan itu menjadi infiniity loop atau tidak ada batasan seperti contoh gambar tersebut.
+
+    \item \textbf{Verifikasi urutan penjadwalan}
+        \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.85\textwidth]{Figure/q4.jpeg}
+                \caption{Ekspektasi output Round-Robin di layar QEMU}
+                \label{fig:langkah-q4}
+        \end{figure}
+        Apakah urutan Thread A $\rightarrow$ Thread B $\rightarrow$ Thread C $\rightarrow$ Thread A $\rightarrow \dots$ terjaga secara konsisten pada hasil Anda? Jelaskan mengapa urutan ini dapat dijamin oleh implementasi FIFO pada \textit{ready queue}.\\
+        \textbf{Jawaban:}\\
+        Setelah tahap implementasi selesai, seluruh \textit{warning} pada saat kompilasi tidak lagi muncul. Peringatan tersebut hilang karena variabel-variabel seperti \texttt{ready\_tail},
+        \texttt{ready\_head}, dan \texttt{ready\_count}, beserta fungsi-fungsi yang sebelumnya hanya dideklarasikan tanpa instruksi, kini telah digunakan secara aktif. Seluruh elemen tersebut
+        telah dioperasikan dan diintegrasikan sepenuhnya ke dalam alur logika pemrogragam pada fungsi \texttt{thread\_yield()} dan \texttt{next\_thread\_to\_run()}.
+
+    \item \textbf{Analisis warning compiler sebelum dan setelah implementasi.}
+    Apakah \textit{warning} \texttt{unused-function} dan \texttt{unused-variable} yang muncul sebelum implementasi masih ada setelah Anda mengimplementasikan ketiga fungsi? Jelaskan mengapa \textit{warning} tersebut hilang.\\
+    \textbf{Jawaban:}\\
+    Ya, urutan penjadwalannya akan selalu konsisten dan tidak berubah-ubah. Hal ini bisa terjadi karena antrean thread (\textit{ready queue}) yang saya buat menggunakan prinsip ``siapa yang pertama masuk,
+    dia yang pertama keluar'' (FIFO). Sederhananya, setiap kali ada thread yang selesai menggunakan gilirannya dan memanggil \texttt{thread\_yield()}, thread tersebut akan langsung pindah ke posisi paling belakang antrean.
+    Sementara itu, CPU akan selalu mengambil thread berikutnya yang sudah menunggu di posisi paling depan. Karena antrean ini dibuat melingkar (\textit{circular array}), gilirannya jadi rapi dan adil seperti roda yang berputar,
+    sehingga urutan A-B-C akan terus berulang tanpa ada yang saling menyalip.
+
+\end{enumerate}
+
+\subsection{Eksplorasi Mandiri}
+Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah selanjutnya yaitu menambahkan thread keempat atau Thread D dengan fungsi dan warna VGA berbeda di \texttt{src/kernel.c}.
+
+\begin{enumerate}
+    \item \textbf{Menambahkan Thread Keempat}\\
+    Langkah selanjutnya adalah, buka kembali halaman terminal, kemudian jalankan perintah \texttt{cd starter-code-os32/src}
+    jika sudah berada didalam direktori tersebut, jalankan perintah \texttt{nano kernel.c} untuk membuka teks editor. Di dalam teks editor
+    tersebut, kalian bisa mencari bagian code seperti ini.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Figure/a0.png}
+        \caption{Menambahkan Thread D}
+        \label{fig:langkah-a0}
+        \end{figure}
+    Tambahkan thread D tepat dibawah thread C, sesuaikan code yang ada agar program dapat berjalan dengan benar tanpa error, kemudian lakukan langkah berikut.
+    Jika sudah menambahkan thread ke empat atau thread D pada \texttt{kernel.c}, kemudian save dengan CTRL + O enter, dan CTR: + X untuk keluar teks editor.
+    Langkah selanjutnya, kembali ke terminal lalu masuk ke container docker dengan perintah seperti sebelumnya, yaitu \texttt{docker run --rm -it -v
+    /home/\$USER/starter-code-os32:/worspace sinanonym/ifos-env}.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Figure/a4.png}
+        \caption{Melakukan konfigurasi ulang dan menjalankan QEMU}
+        \label{fig:langkah-a4}
+        \end{figure}
+    lalu jalankan perintah \texttt{make clean \&\& make \&\& make run}, supaya QEMU dijalankan seperti gambar dibawah ini.
+        \begin{enumerate}[label=(\alph*)]
+            \item \textbf{Tampilan layar QEMU}
+                \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.85\textwidth]{Figure/a3.png}
+                \caption{Tampilan layar QEMU ketika berhasil di implementasikan}
+                \label{fig:langkah-a3}
+                \end{figure}
+    Thread D yang sebelumnya ditambahkan sudah berhasil dijalankan, dapat dilihat pada layar QEMU tesebut, thread A sampai D berjalan secara bergantian yang membuktikan bahwa
+    ekplorasi mandiri yang telah dilakukan untuk menambahkan thread keempat telah berhasil di implementasikan.
+
+            \item {Berapa nilai MAX\_THREADS saat ini? Apa yang terjadi jika Anda membuat thread melebihi batas tersebut? Tunjukkan dengan percobaan dan sertakan bukti.}\\
+            \textbf{Jawaban:}\\
+            Kapasitas maksimal thread dalam sistem dibatasi oleh makro \texttt{MAX\_THREADS}. Pada implementasi antrean \texttt{ready\_queue} yang menggunakan struktur data
+            \textit{circular array} dengan ukuran \texttt{MAX\_THREADS * 2}, penambahan thread yang melebihi batas kapasitas akan memicu kondisi \textit{queue full} atau kegagalan alokasi memori.
+            Jika hal ini terjadi, fungsi pembuatan thread (\texttt{thread\_create}) akan gagal mendapatkan halaman memori (mengembalikan nilai \texttt{NULL} atau \texttt{TID\_ERROR}) sebelum
+            sempat memasukkannya ke dalam antrean. Mekanisme ini mencegah terjadinya penimpaan (\textit{over-write}) data antara ekor (\textit{tail}) dan kepala (\textit{head}) antrean. Akibatnya,
+            sistem operasi secara otomatis menolak pembuatan thread baru yang berlebih tersebut. Thread-thread sebelumnya yang sudah berhasil masuk ke antrean akan tetap berjalan secara normal dan aman tanpa gangguan.\\
+            Sebagai contoh pembuktian, misalkan nilai \texttt{MAX\_THREADS} kita tetapkan sebesar 4. Kemudian, di dalam fungsi \texttt{kernel\_main}, kita sengaja memanggil \texttt{thread\_create} sebanyak 5 kali untuk membuat Thread A, B, C, D, dan E.
+            Dari yang dapat kita lihat pada emulator QEMU, empat thread pertama (A, B, C dan E) akan berhasil dibuat, masuk ke \textit{ready queue}, dan mencetak output secara bergantian (\textit{Round-Robin}).
+            Namun, saat iterasi mencapai pembuatan Thread E, sistem mendeteksi bahwa kuota telah penuh, sehingga \texttt{allocate\_thread\_page()} mengembalikan nilai \texttt{NULL} dan fungsi langsung terhenti.
+            Pada layar terminal QEMU, kita hanya akan melihat \textit{tick} dari Thread A, B, C dan D saja. Kegagalan pembuatan Thread E tidak menyebabkan sistem \textit{crash} atau \textit{hang}, membuktikan bahwa
+            OS berhasil mengisolasi \textit{error} batas kapasitas dan tetap mengeksekusi sisa proses dengan stabil.
+
+        \end{enumerate}
+
+    \item \textbf{Simulasi finite thread}
+    Pada tahap ini, kita akan merubah \texttt{func\_a} di \texttt{src/kernel.c} agar hanya mencetak 5 kali lalu berhenti. Langkah pertama dengan masuk ke dalam direktori dengan perintah
+    texttt{cd starter-code-os32/src} kemudian jalankan perintah \texttt{nano kernel.c} agar masuk kedalam teks editor.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Figure/w1.png}
+        \caption{Merubah looping untuk func\_a agar hanya mencetak 5 kali}
+        \label{fig:langkah-w1}
+        \end{figure}
+        Cari bagian ini, kemudian rubah angka dipaling kiri code yang awalnya adalah 0 (tidak memiliki batasan) menjadi 5 sesuai perintah, saya mengubah angka pada function lain
+        karena ingin membuktikan bahwa func\_a akan berhenti ketika sudah mencetak 5 kali.
+        Jika sudah melakukan implementasi pada program, tekan CTRL + O , enter lalu CTRL + X untuk keluar dari teks editor.
+        Langkah selanjutnya sama seperti langka sebelumnya, yaitu kembali ke container docker untuk menampilkan layar QEMU.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Figure/w2.png}
+        \caption{Merubah looping untuk func\_a agar hanya mencetak 5 kali}
+        \label{fig:langkah-w2}
+        \end{figure}
+        Ini adalah tampilan layar QEMU yang dihasilkan dari implementasi sebelumnya dengan membatasi func\_a agar mencetak 5 kali lalu berhenti.\\
+        \textbf{Pertanyaa:}\\
+        Amati apakah Thread B Thread C dan Thread D tetap berjalan setelah Thread A selesai, lalu jelaskan peran \texttt{thread\_exit()} dalam skenario ini.\\
+        \textbf{Jawaban:}\\
+        Berdasarkan eksplorasi mandiri yang telah dilakukan dengan tambahan Thread D, ketika Thread A diatur selesai lebih awal (hanya 5 iterasi), Thread B, C, dan D tetap berjalan normal. Rotasi penjadwalan yang semula A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D otomatis berubah menjadi B $\rightarrow$ C $\rightarrow$ D secara berulang.
+
+        Hal ini terjadi karena saat Thread A selesai, sistem memanggil fungsi \texttt{thread\_exit()} secara implisit. Fungsi ini berperan penting untuk mengubah status Thread A menjadi \texttt{THREAD\_DYING} dan membersihkan alokasi memorinya guna mencegah \textit{memory leak}. 
+
+        Selain itu, \texttt{thread\_exit()} memastikan \textit{scheduler} langsung melompat ke thread selanjutnya dan menjamin Thread A dihapus permanen sehingga tidak masuk lagi ke \texttt{ready\_queue}. Hasilnya, sisa thread (B, C, dan D) dapat terus berbagi jatah CPU dengan lancar tanpa gangguan.
+
+    \item \textbf{Refleksi: cooperative vs. preemptive scheduling.}
+    Sistem IF-OS saat ini menggunakan \textit{cooperative scheduling} di mana thread hanya berganti saat secara sadar memanggil \texttt{thread\_yield()}.
+        \begin{enumerate}[label=(\alph*)]
+            \item \textbf{Apa kelemahan utama cooperative scheduling dibandingkan preemptive scheduling? Berikan contoh skenario nyata di mana kelemahan ini berbahaya.}\\
+            \textbf{Jawaban:}\\
+            Kelemahan utama dari \textit{cooperative scheduling} adalah sistem yang sangat bergantung pada "kesadaran" setiap thread untuk menyerahkan jatah waktu CPU secara sukarela melalui instruksi \texttt{yield()}. 
+
+            Logikanya, jika ada satu thread yang terjebak dalam perulangan abadi (\textit{infinite loop}) akibat \textit{bug}, thread tersebut tidak akan pernah memberikan gilirannya kepada proses lain. Karena dalam model
+            ini kernel tidak memiliki kuasa untuk mengambil alih CPU secara paksa, thread yang macet tersebut akan "menyandera" seluruh sumber daya sistem. Dampaknya, sistem operasi akan membeku (\textit{freeze}) total; 
+            bahkan perangkat seperti \textit{keyboard} dan \textit{mouse} tidak akan merespons karena tidak pernah mendapatkan giliran untuk dieksekusi oleh CPU.
+
+            \item \textbf{Komponen perangkat keras apa yang perlu ditambahkan agar kernel dapat memaksa pergantian thread secara otomatis tanpa bergantung pada kepatuhan thread itu sendiri?}\\
+            \textbf{Jawaban:}\\
+            Agar masalah pada \textit{cooperative scheduling} dapat diatasi, sistem membutuhkan komponen perangkat keras tambahan berupa pengatur waktu, seperti \textit{Hardware Timer Interrupt} (contohnya komponen \textit{Programmable Interval Timer} atau PIT). 
+
+            Secara logika, komponen ini ibarat alarm yang terus menghitung mundur dan secara otomatis mengirimkan sinyal interupsi ke CPU secara berkala (misalnya setiap beberapa milidetik). Sinyal "paksaan" dari perangkat keras ini akan membuat CPU menghentikan sementara
+            program yang sedang dieksekusi, lalu melompat ke fungsi khusus milik sistem operasi yang disebut \textit{Interrupt Service Routine} (ISR). Dari sinilah, \textit{scheduler} kernel bisa mengambil alih kembali kontrol CPU secara mutlak dan mengganti giliran thread
+            yang berjalan secara paksa. Mekanisme inilah yang menjadi dasar dari \textit{preemptive scheduling}.
+        \end{enumerate}
+
+\end{enumerate}
+
+
+
+% --- 5. Pembahasan ---
+\newpage
+\section{Pembahasan}
+\label{sec:pembahasan}
+
+Pada tahap awal praktikum, saya melakukan persiapan lingkungan kerja menggunakan Docker untuk mengisolasi dependensi \textit{cross-compile} dan QEMU. Saat pertama kali menjalankan perintah \texttt{make}, saya mengamati munculnya sejumlah \textit{compiler warning} pada terminal,
+seperti yang terlihat pada Gambar~\ref{fig:langkah-1.2}. Fenomena ini terjadi karena kode sumber awal masih berupa kerangka kosong (\textit{stub}), sehingga \textit{compiler} memberikan peringatan terkait parameter yang tidak digunakan atau fungsi yang belum memiliki nilai kembalian.
+Secara teori, hal ini merupakan mekanisme keamanan GCC untuk mencegah potensi \textit{undefined behavior} pada kernel sebelum saya mengimplementasikan logika fungsi yang sebenarnya.
+
+Selanjutnya, saya menganalisis kegagalan sistem saat menjalankan QEMU sebelum implementasi dilakukan (Gambar~\ref{fig:langkah-1.4}), di mana sistem mengalami \textit{hang} karena \textit{scheduler} tidak menemukan \textit{thread} di dalam \textit{ready queue}. Untuk mengatasinya,
+saya mengimplementasikan fungsi \texttt{thread\_create()} dengan memperhatikan struktur memori 4 KB sesuai Tabel~\ref{tab:memori}. Saya menggunakan operasi bitwise untuk menentukan alamat dasar \textit{page} agar kernel dapat mengakses \textit{Thread Control Block} (TCB) dengan tepat.
+Kendala yang saya hadapi adalah ketelitian dalam memanipulasi \textit{pointer} alamat memori, karena kesalahan sekecil apa pun pada level ini dapat menyebabkan \textit{Page Fault} yang menghentikan seluruh sistem.
+
+Setelah mengimplementasikan mekanisme \texttt{thread\_yield()} dan \texttt{next\_thread\_to\_run()}, saya berhasil menjalankan Thread A, B, dan C secara bergantian sebagaimana ditunjukkan pada Gambar~\ref{fig:langkah-1.7}. Hasil ini memberikan \textit{insight} mendalam bagi
+saya mengenai cara kerja penjadwalan \textit{Round-Robin} secara kooperatif, di mana setiap \textit{thread} secara sukarela menyerahkan kontrol CPU melalui antrean FIFO. Namun, saya menyadari keterbatasan model ini: jika salah satu \textit{thread} mengalami \textit{infinite loop}
+tanpa memanggil \texttt{yield()}, maka sistem akan membeku. Pengamatan ini memperkuat pemahaman saya bahwa dalam sistem operasi modern, diperlukan interupsi perangkat keras untuk mendukung penjadwalan \textit{preemptive} agar kernel tetap memegang kendali penuh.
+
+% --- 6. Kesimpulan ---
+\newpage
+\section{Kesimpulan}
+\label{sec:kesimpulan}
+\noindent \textbf{Kesimpulan}
+
+Saya memahami bahwa manajemen thread pada tingkat kernel tidak hanya bersifat konseptual, tetapi benar-benar diimplementasikan melalui struktur seperti \textit{Thread Control Block} yang menyimpan informasi penting terkait thread, termasuk status dan konteks CPU. Melalui praktikum ini,
+saya dapat melihat secara langsung bagaimana mekanisme \textit{scheduling} bekerja dalam menentukan thread yang akan dieksekusi berdasarkan kondisi tertentu seperti \textit{READY} dan \textit{BLOCKED}.
+
+Saya juga melakukan uji coba proses \textit{context switching}, yaitu penyimpanan dan pemuatan kembali register CPU menggunakan pendekatan bahasa tingkat rendah. Dari sini, saya memahami bahwa perpindahan eksekusi antar thread memerlukan kontrol yang rinci agar sistem dapat
+berjalan dengan stabil dan efisien.
+
+Berdasarkan hasil praktikum, tujuan yang ditetapkan telah tercapai. Saya menjadi lebih memahami arsitektur perangkat lunak dalam manajemen thread di tingkat kernel serta implementasi \textit{context switching}. Secara keseluruhan, saya memperoleh pemahaman bahwa
+struktur data thread, algoritma penjadwalan, dan mekanisme \textit{context switching} merupakan komponen yang saling terhubung dalam mendukung eksekusi multi-threading secara optimal.
+
+% --- 7. Lampiran: Bukti Penggunaan AI ---
+\newpage
+\section{Lampiran: Bukti Penggunaan AI}
+\label{sec:lampiran-ai}
+
+Sesuai dengan kebijakan penggunaan kecerdasan buatan (AI) dalam kegiatan akademik,
+praktikan \textbf{wajib} mencantumkan setiap penggunaan alat bantu AI yang dilakukan
+selama pengerjaan hands-on ini. Ketidakjujuran dalam pelaporan penggunaan AI dianggap
+sebagai pelanggaran integritas akademik.
+
+\subsection{Identitas Penggunaan AI}
+\label{subsec:ai-info}
+
+\begin{table}[h]
+\centering
+\caption{Informasi Alat AI yang Digunakan}
+\label{tab:ai-info}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Keterangan} & \textbf{Isian} \\ \hline
+
+Nama Alat AI & Gemini \\ \hline
+
+Versi / Model & Gemini 3 Flash (Paid Tier) \\ \hline
+
+Tanggal Penggunaan & 23 April 2026 \\ \hline
+
+Tujuan Penggunaan & 
+1. Mencari referensi dasar teori multi-threading \newline
+2. Panduan git clone di Ubuntu \newline
+3. Penjelasan field struktur data thread \newline
+4. Perbedaan thread\_ready dan thread\_blocked \\ \hline
+
+\end{tabular}
+\end{table}
+
+\subsection{Tangkapan Layar Percakapan AI}
+\label{subsec:ai-screenshot}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ai1.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ai2.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ai4.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ai3.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ia1.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ia2.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/ia3.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o1.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o2.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o3.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o4.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o5.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o6.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/o7.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/e1.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/e2.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figure/e3.png}
+    \caption{Tangkapan Layar Percakapan AI --- Sesi 1}
+    \label{fig:ai-screenshot-1}
+\end{figure}
