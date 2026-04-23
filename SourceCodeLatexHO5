@@ -51,9 +51,7 @@
 \subsection{Sesi 1 - Persiapan Lingkungan Kerja}
 \noindent
 \textbf{Langkah 1: Masuk ke Container Docker}\\
-Langkah pertama setelah berhasil melakukan instalasi docker dengan perintah \texttt{sudo apt install -y docker.io} dan menginstall dependensasi cross-compile x86 serta QEMU dengan perintah
-\texttt{sudo apt install -y build-essential gcc-multilib nasm} dan \texttt{sudo apt install -y qemu-system-x86 grub-pc-bin xorriso}. Langkah selanjutnya menjalankan perintah berikut \texttt{docker run --rm -it -v /home/\$USER/starter-code-}
-\texttt{os32:/workspace sinanonym/ifos-env} di terminal, lalu masuk ke dalam direktori workspace.
+
 
 \begin{figure}[H]
     \centering
@@ -61,12 +59,11 @@ Langkah pertama setelah berhasil melakukan instalasi docker dengan perintah \tex
     \caption{Menjalankan perintah untuk masuk ke dalam container dan masuk ke workspace}
     \label{fig:langkah-1}
 \end{figure}
-Selanjutnya jangan lupa untuk melakukan clone diterminal untuk mengakses file yang sudah diberikan dengan perintah \texttt{git clone https://github.com/Aziz097/starter-code-os32} jika berhasil, baru lanjut ke langkah berikutnya.
+
 
 \vspace{0.3cm}
 
 \textbf{Langkah 2: Compile starter code sebelum implementasi}\\
-Jika suda berada didalam workspace, selanjutnya menjalankan perintah \texttt{make clean \&\& make} untuk mem-build ulang program dari awal secara bersih
 
 \begin{figure}[H]
     \centering
@@ -85,7 +82,7 @@ Jika suda berada didalam workspace, selanjutnya menjalankan perintah \texttt{mak
 
 
 \textbf{Langkah 3: Jalankan QEMU sebelum implementasi}\\
-Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perintah \texttt{make run} untuk melihat hasilnya
+
 
 \begin{figure}[H]
     \centering
@@ -112,17 +109,17 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
         \hline
         \textbf{Field} & \textbf{Tipe Data} & \textbf{Fungsi} \\
         \hline
-        tid & \texttt{tid\_t} & Menyimpan ID numerik unik untuk mengidentifikasi setiap thread. \\
+        tid & \texttt{tid\_t} & [isi] \\
         \hline
-        status & \texttt{enum thread\_status} & Menyimpan kondisi status thread saat ini (misalnya RUNNING, READY, BLOCKED). \\
+        status & \texttt{enum thread\_status} & [isi] \\
         \hline
-        name & \texttt{char[16]} & Menyimpan nama string thread (maksimal 16 karakter) untuk mempermudah debugging. \\
+        name & \texttt{char[16]} & [isi] \\
         \hline
-        stack & \texttt{uint8\_t *} & Pointer ke alamat memori puncak stack yang digunakan oleh thread. \\
+        stack & \texttt{uint8\_t *} & [isi] \\
         \hline
-        priority & \texttt{int} & Menentukan tingkat prioritas thread untuk kebutuhan penjadwal (scheduler). \\
+        priority & \texttt{int} & [isi] \\
         \hline
-        magic & \texttt{unsigned} & Menyimpan angka validasi khusus (magic number) untuk mendeteksi stack overflow. \\
+        magic & \texttt{unsigned} & [isi] \\
         \hline
         \end{tabular}
         \caption{Field-field pada struct thread}
@@ -138,15 +135,15 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
         \hline
         \textbf{Offset (Relatif)} & \textbf{Isi} \\
         \hline
-        +4096 & ESP awal (puncak halaman memori / bottom of stack). \\
+        +4096 & [isi] \\
         \hline
-        $\downarrow$ & \texttt{switch\_threads\_frame} (berisi register callee-saved: EBP, EBX, ESI, EDI). \\
+        $\downarrow$ & \texttt{switch\_threads\_frame}  \\
         \hline
-        $\downarrow$ & \texttt{switch\_entry\_frame} (berisi alamat \texttt{switch\_entry}). \\
+        $\downarrow$ & \texttt{switch\_entry\_frame} \\
         \hline
-        $\downarrow$ & \texttt{kernel\_thread\_frame} (berisi parameter EIP, fungsi utama, dan argumen \textit{aux}). \\
+        $\downarrow$ & \texttt{kernel\_thread\_frame} \\
         \hline
-        (tengah) & Area stack kosong yang bebas digunakan dan akan terus tumbuh ke arah bawah mendekati 0. \\
+        (.....) & [isi] \\
         \hline
         +0 & \texttt{struct thread} (TCB / \textit{Thread Control Block} berada di dasar halaman). \\
         \hline
@@ -166,10 +163,13 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
 
             \begin{enumerate}[label=(\alph*)]
             \item \textbf{Jelaskan apa yang dilakukan operasi bitwise \texttt{esp \& \textasciitilde(PGSIZE - 1)} dan mengapa hasilnya selalu merupakan alamat awal page.} \\
+			[isi]
 
             \item \textbf{Mengapa teknik ini hanya benar jika \texttt{struct thread} selalu berada di offset 0 dari halamannya? Apa dampaknya jika \texttt{initial\_thread\_page} di \texttt{boot.asm} tidak di-align ke 4096 byte?} \\
+			[isi]
 
             \item \textbf{Apa fungsi \texttt{THREAD\_MAGIC} dan bagaimana \texttt{thread\_current()} menggunakannya untuk mendeteksi stack overflow?} \\
+			[isi]
 
             \end{enumerate}
     \end{itemize}
@@ -186,14 +186,11 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
             \hline
             \textbf{Urutan Push} & \textbf{Nama Frame} & \textbf{Field Penting} & \textbf{Nilai yang Diisi} \\
             \hline
-            Paling atas (1) & kernel\_thread\_frame & eip, function, aux &
-            eip diisi NULL, function diisi pointer fungsi target, aux diisi argumen fungsi. \\
+            Paling atas (1) & kernel\_thread\_frame & eip, function, aux & [isi] \\
             \hline
-            Tengah (2) & switch\_entry\_frame & eip &
-            eip diisi alamat fungsi \texttt{kernel\_thread}. \\
+            Tengah (2) & switch\_entry\_frame & eip & [isi] \\
             \hline
-            Paling bawah (3) & switch\_threads\_frame & eip, register callee-saved &
-            eip diisi \texttt{switch\_entry}, register EBP, EBX, ESI, EDI diisi 0, serta \texttt{cur\_dummy} dan \texttt{next\_dummy} diisi NULL. \\
+            Paling bawah (3) & switch\_threads\_frame & eip, register callee-saved & [isi] \\
             \hline
             \end{tabular}
             \caption{Urutan stack frame pada pembuatan thread}
@@ -205,24 +202,21 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
         Saat thread baru pertama kali dijadwalkan melalui \texttt{switch\_threads()}, jelaskan secara berurutan apa yang terjadi mulai dari \texttt{switch\_entry} hingga fungsi thread (func\_a, func\_b, atau func\_c) benar-benar mulai berjalan.
 
         \textbf{Jawaban:}\\
+		[isi]
 
         \item \textbf{Tulis implementasi \texttt{thread\_create()}.}\\
-        Untuk melakukan implementasi \texttt{thread\_create()}, pastikan anda sedang berada didalam direktori \texttt{starter-code-os32} menggunakan perintah \texttt{cd starter-code-os32/src} kemudian gunakan perintah \texttt{nano thread.c} untuk menuliskan
-        source code atau mengimplementasikan \texttt{thread\_create()}, jika tempat untuk mengimplementasikan sudah ditemukan, langkah selanjutnya menulisnya \textit{source code} seperti dibawah ini.
-        \begin{figure}[H]
+
             \centering
             \includegraphics[width=0.85\textwidth]{Figure/ss4.png}
             \caption{Implementasi \texttt{thread\_create()}}
             \label{fig:langkah-4}
         \end{figure}
-        Tekan CTRL + O lalu enter untuk meyimpan perubahan kemudian CTRL + X untuk keluar dari teks editor.
+
 
         \item \textbf{Penanganan kegagalan alokasi.}
         Kapan \texttt{allocate\_thread\_page()} dapat mengembalikan NULL, dan bagaimana \texttt{thread\_create()} harus menanganinya?\\
         \textbf{Jawaban:}\\
-        Fungsi \texttt{allocate\_thread\_page()} akan menghasilkan nilai balik \texttt{NULL} ketika sistem mengalami kegagalan alokasi memori fisik (RAM) untuk halaman baru sebesar 4 KB. Kondisi tersebut diantisipasi dalam \texttt{thread\_create()}
-        melalui instruksi \texttt{if (!t) return TID\_ERROR;}. Mekanisme pengecekan ini berfungsi untuk menghentikan eksekusi secara prematur dan mengembalikan kode kesalahan, sehingga mencegah terjadinya operasi \textit{dereference} pada alamat
-        \texttt{NULL} yang berisiko memicu kegagalan sistem fatal seperti \textit{Page Fault} atau \textit{kernel panic}.
+		[isi]
 
     \end{itemize}
 
@@ -241,20 +235,16 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
             \textbf{Aspek} & \textbf{THREAD\_READY} & \textbf{THREAD\_BLOCKED} \\ \hline
 
             Siapa yang menetapkan? & 
-            Fungsi penjadwal menetapkan status ini saat membuat thread baru melalui thread\_unblock atau ketika thread memanggil thread\_yield. & 
-            Sistem menetapkan status ini ketika thread melakukan penundaan, misalnya saat menunggu I/O atau memanggil thread\_block. \\ \hline
+			[isi] & [isi] \\ \hline
 
             Masuk ke ready queue? & 
-            Thread akan dimasukkan ke dalam ready\_queue sehingga siap untuk dijadwalkan oleh CPU. & 
-            Thread tidak berada dalam ready\_queue karena sedang menunggu suatu kejadian tertentu. \\ \hline
+			[isi] & [isi] \\ \hline
 
             Cara kembali ke RUNNING & 
-            Thread akan dipilih secara otomatis oleh fungsi next\_thread\_to\_run ketika tiba gilirannya untuk dieksekusi. & 
-            Thread harus di-unblock terlebih dahulu oleh sistem atau interupsi sebelum dapat kembali ke status READY. \\ \hline
+            [isi] & [isi] \\ \hline
 
             Contoh penggunaan & 
-            Thread berada dalam kondisi menunggu giliran untuk menggunakan CPU. & 
-            Thread berhenti sementara karena menunggu input dari pengguna seperti keyboard atau operasi I/O lainnya. \\ \hline
+            [isi] & [isi] \\ \hline
 
             \end{tabular}
             \caption{Perbandingan THREAD\_READY dan THREAD\_BLOCKED}
@@ -265,9 +255,7 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
     \item \textbf{Implementasi Fungsi \textit{Scheduling}}
         \begin{itemize}
             \item \textbf{Tulis implementasi \texttt{thread\_yield(void)}.}\\
-            Pada langkah ini, sama seperti mengimplementasikan \texttt{thread\_create()}, pastikan anda berada pada halaman terminal dan berada di dalam direktori \texttt{starter-code-os32/src}, jika belum berada didalam
-            di dalam direktori, silahkan akses menggunakan perintah \texttt{starter-code-os32/src} jika sudah, selanjutnya masuk ke teks editor dengan perintah \texttt{nano thread.c}, di dalam teks editor cari fungsi
-            \texttt{thread\_yield(void)} dan \texttt{*next\_thread\_to\_run()} kemudian implementasikan kode dibawah ini.
+
                 \begin{figure}[H]
                 \centering
                 \includegraphics[width=0.85\textwidth]{Figure/ss5.png}
@@ -281,14 +269,16 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
                 \caption{Implementasi \texttt{*next\_thread\_to\_run()}}
                 \label{fig:langkah-6}
                 \end{figure}
-            Tekan CTRL + O lalu enter untuk meyimpan perubahan kemudian CTRL + X untuk keluar dari teks editor.
+
             \item \textbf{Mengapa mengembalikan \texttt{initial\_thread}, bukan NULL?}\\
             Jelaskan apa yang akan terjadi pada fungsi \textit{schedule()} jika \texttt{next\_thread\_to\_run()} mengembalikan NULL saat antrian kosong.\\
             \textbf{Jawaban:}\\
+			[isi]
 
             \item \textbf{\texttt{thread\_block()} vs \texttt{thread\_yield()} diakhir \texttt{kernel\_main}.}
             Jelaskan perbedaan perilaku kedua fungsi tersebut setelah Thread A, B, dan C berhasil dibuat, dan mengapa \texttt{thread\_block()} adalah pilihan yang benar.\\
             \textbf{Jawaban:}\\
+			[isi]
 
             \end{itemize}
 \end{enumerate}
@@ -297,23 +287,21 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
 \subsection{Sesi 4: Kompilasi dan Pengujian QEMU}
 \begin{enumerate}
     \item \textbf{Melakukan kompilasi ulang setelah implementasi selesai}\\
-    Untuk melakukan kompilasi ulang setelah semua implementasi selesai adalah dengan menggunakan perintah \texttt{docker run --rm -it -v
-    /home/\$USER/starter-code-os32:/ sinanonym/ifos-env} , jika sudah masuk ke dalam container docker kembali, langkah selanjutnya melakukan kompilasi ulang
-    dengan perintah \texttt{make clean \&\& make}.
+
         \begin{figure}[H]
             \centering
             \includegraphics[width=0.85\textwidth]{Figure/q1.png}
             \caption{Kompilasi ulang dengan perintah \texttt{make clean \&\& make}}
             \label{fig:langkah-q1}
         \end{figure}
-        Jika sudah, silahkan lanjutkan dengan perintah \texttt{make run} untuk menampilkan layar QEMU.
+
         \begin{figure}[H]
             \centering
             \includegraphics[width=0.85\textwidth]{Figure/q3.png}
             \caption{Menampilkan QEMU setelah implementasi berhasil}
             \label{fig:langkah-1.7}
         \end{figure}
-        Hasil yang ditampilan layar QEMU seperti gambar diatas, dimana keluaran yang dihasilkan itu menjadi infiniity loop atau tidak ada batasan seperti contoh gambar tersebut.
+
 
     \item \textbf{Verifikasi urutan penjadwalan}
         \begin{figure}[H]
@@ -324,38 +312,34 @@ Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perin
         \end{figure}
         Apakah urutan Thread A $\rightarrow$ Thread B $\rightarrow$ Thread C $\rightarrow$ Thread A $\rightarrow \dots$ terjaga secara konsisten pada hasil Anda? Jelaskan mengapa urutan ini dapat dijamin oleh implementasi FIFO pada \textit{ready queue}.\\
         \textbf{Jawaban:}\\
+		[isi]
 
     \item \textbf{Analisis warning compiler sebelum dan setelah implementasi.}
     Apakah \textit{warning} \texttt{unused-function} dan \texttt{unused-variable} yang muncul sebelum implementasi masih ada setelah Anda mengimplementasikan ketiga fungsi? Jelaskan mengapa \textit{warning} tersebut hilang.\\
     \textbf{Jawaban:}\\
+	[isi]
 
 \end{enumerate}
 
 \subsection{Eksplorasi Mandiri}
-Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah selanjutnya yaitu menambahkan thread keempat atau Thread D dengan fungsi dan warna VGA berbeda di \texttt{src/kernel.c}.
 
 \begin{enumerate}
     \item \textbf{Menambahkan Thread Keempat}\\
-    Langkah selanjutnya adalah, buka kembali halaman terminal, kemudian jalankan perintah \texttt{cd starter-code-os32/src}
-    jika sudah berada didalam direktori tersebut, jalankan perintah \texttt{nano kernel.c} untuk membuka teks editor. Di dalam teks editor
-    tersebut, kalian bisa mencari bagian code seperti ini.
+
         \begin{figure}[H]
         \centering
         \includegraphics[width=0.85\textwidth]{Figure/a0.png}
         \caption{Menambahkan Thread D}
         \label{fig:langkah-a0}
         \end{figure}
-    Tambahkan thread D tepat dibawah thread C, sesuaikan code yang ada agar program dapat berjalan dengan benar tanpa error, kemudian lakukan langkah berikut.
-    Jika sudah menambahkan thread ke empat atau thread D pada \texttt{kernel.c}, kemudian save dengan CTRL + O enter, dan CTR: + X untuk keluar teks editor.
-    Langkah selanjutnya, kembali ke terminal lalu masuk ke container docker dengan perintah seperti sebelumnya, yaitu \texttt{docker run --rm -it -v
-    /home/\$USER/starter-code-os32:/worspace sinanonym/ifos-env}.
+
         \begin{figure}[H]
         \centering
         \includegraphics[width=0.85\textwidth]{Figure/a4.png}
         \caption{Melakukan konfigurasi ulang dan menjalankan QEMU}
         \label{fig:langkah-a4}
         \end{figure}
-    lalu jalankan perintah \texttt{make clean \&\& make \&\& make run}, supaya QEMU dijalankan seperti gambar dibawah ini.
+
         \begin{enumerate}[label=(\alph*)]
             \item \textbf{Tampilan layar QEMU}
                 \begin{figure}[H]
@@ -364,27 +348,23 @@ Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah s
                 \caption{Tampilan layar QEMU ketika berhasil di implementasikan}
                 \label{fig:langkah-a3}
                 \end{figure}
-    Thread D yang sebelumnya ditambahkan sudah berhasil dijalankan, dapat dilihat pada layar QEMU tesebut, thread A sampai D berjalan secara bergantian yang membuktikan bahwa
-    ekplorasi mandiri yang telah dilakukan untuk menambahkan thread keempat telah berhasil di implementasikan.
+
 
             \item {Berapa nilai MAX\_THREADS saat ini? Apa yang terjadi jika Anda membuat thread melebihi batas tersebut? Tunjukkan dengan percobaan dan sertakan bukti.}\\
             \textbf{Jawaban:}\\
+			[isi]
 
         \end{enumerate}
 
     \item \textbf{Simulasi finite thread}
-    Pada tahap ini, kita akan merubah \texttt{func\_a} di \texttt{src/kernel.c} agar hanya mencetak 5 kali lalu berhenti. Langkah pertama dengan masuk ke dalam direktori dengan perintah
-    texttt{cd starter-code-os32/src} kemudian jalankan perintah \texttt{nano kernel.c} agar masuk kedalam teks editor.
+
         \begin{figure}[H]
         \centering
         \includegraphics[width=0.85\textwidth]{Figure/w1.png}
         \caption{Merubah looping untuk func\_a agar hanya mencetak 5 kali}
         \label{fig:langkah-w1}
         \end{figure}
-        Cari bagian ini, kemudian rubah angka dipaling kiri code yang awalnya adalah 0 (tidak memiliki batasan) menjadi 5 sesuai perintah, saya mengubah angka pada function lain
-        karena ingin membuktikan bahwa func\_a akan berhenti ketika sudah mencetak 5 kali.
-        Jika sudah melakukan implementasi pada program, tekan CTRL + O , enter lalu CTRL + X untuk keluar dari teks editor.
-        Langkah selanjutnya sama seperti langka sebelumnya, yaitu kembali ke container docker untuk menampilkan layar QEMU.
+
         \begin{figure}[H]
         \centering
         \includegraphics[width=0.85\textwidth]{Figure/w2.png}
@@ -392,17 +372,20 @@ Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah s
         \label{fig:langkah-w2}
         \end{figure}
         Ini adalah tampilan layar QEMU yang dihasilkan dari implementasi sebelumnya dengan membatasi func\_a agar mencetak 5 kali lalu berhenti.\\
-        \textbf{Pertanyaa:}\\
+        \textbf{Pertanyaan:}\\
         Amati apakah Thread B Thread C dan Thread D tetap berjalan setelah Thread A selesai, lalu jelaskan peran \texttt{thread\_exit()} dalam skenario ini.\\
         \textbf{Jawaban:}\\
+		[isi]
 
     Sistem IF-OS saat ini menggunakan \textit{cooperative scheduling} di mana thread hanya berganti saat secara sadar memanggil \texttt{thread\_yield()}.
         \begin{enumerate}[label=(\alph*)]
             \item \textbf{Apa kelemahan utama cooperative scheduling dibandingkan preemptive scheduling? Berikan contoh skenario nyata di mana kelemahan ini berbahaya.}\\
             \textbf{Jawaban:}\\
+			[isi]
 
             \item \textbf{Komponen perangkat keras apa yang perlu ditambahkan agar kernel dapat memaksa pergantian thread secara otomatis tanpa bergantung pada kepatuhan thread itu sendiri?}\\
             \textbf{Jawaban:}\\
+			[isi]
 
         \end{enumerate}
 
