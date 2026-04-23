@@ -12,7 +12,7 @@
 \subsection{Latar Belakang}
 \label{subsec:latar-belakang}
 
-%isi latar belakang
+
 
 \newpage
 \subsection{Tujuan}
@@ -27,7 +27,7 @@
 \section{Dasar Teori}
 \label{sec:dasar-teori}
 
-% isi dasar teori
+
 
 
 % --- 3. Alat dan Bahan ---
@@ -51,6 +51,9 @@
 \subsection{Sesi 1 - Persiapan Lingkungan Kerja}
 \noindent
 \textbf{Langkah 1: Masuk ke Container Docker}\\
+Langkah pertama setelah berhasil melakukan instalasi docker dengan perintah \texttt{sudo apt install -y docker.io} dan menginstall dependensasi cross-compile x86 serta QEMU dengan perintah
+\texttt{sudo apt install -y build-essential gcc-multilib nasm} dan \texttt{sudo apt install -y qemu-system-x86 grub-pc-bin xorriso}. Langkah selanjutnya menjalankan perintah berikut \texttt{docker run --rm -it -v /home/\$USER/starter-code-}
+\texttt{os32:/workspace sinanonym/ifos-env} di terminal, lalu masuk ke dalam direktori workspace.
 
 \begin{figure}[H]
     \centering
@@ -58,10 +61,12 @@
     \caption{Menjalankan perintah untuk masuk ke dalam container dan masuk ke workspace}
     \label{fig:langkah-1}
 \end{figure}
+Selanjutnya jangan lupa untuk melakukan clone diterminal untuk mengakses file yang sudah diberikan dengan perintah \texttt{git clone https://github.com/Aziz097/starter-code-os32} jika berhasil, baru lanjut ke langkah berikutnya.
 
 \vspace{0.3cm}
 
 \textbf{Langkah 2: Compile starter code sebelum implementasi}\\
+Jika suda berada didalam workspace, selanjutnya menjalankan perintah \texttt{make clean \&\& make} untuk mem-build ulang program dari awal secara bersih
 
 \begin{figure}[H]
     \centering
@@ -78,7 +83,9 @@
 \end{figure}
 
 
+
 \textbf{Langkah 3: Jalankan QEMU sebelum implementasi}\\
+Langkah selanjutnya untuk menjalankan QEMU sebelum implementasi dibutuhkan perintah \texttt{make run} untuk melihat hasilnya
 
 \begin{figure}[H]
     \centering
@@ -86,6 +93,7 @@
     \caption{Hasil pada layar QEMU yang dijalankan dari perintah \texttt{make run}}
     \label{fig:langkah-1.4}
 \end{figure}
+
 
 
 \newpage
@@ -158,11 +166,12 @@
 
             \begin{enumerate}[label=(\alph*)]
             \item \textbf{Jelaskan apa yang dilakukan operasi bitwise \texttt{esp \& \textasciitilde(PGSIZE - 1)} dan mengapa hasilnya selalu merupakan alamat awal page.} \\
-            
+
             \item \textbf{Mengapa teknik ini hanya benar jika \texttt{struct thread} selalu berada di offset 0 dari halamannya? Apa dampaknya jika \texttt{initial\_thread\_page} di \texttt{boot.asm} tidak di-align ke 4096 byte?} \\
 
             \item \textbf{Apa fungsi \texttt{THREAD\_MAGIC} dan bagaimana \texttt{thread\_current()} menggunakannya untuk mendeteksi stack overflow?} \\
-        
+
+            \end{enumerate}
     \end{itemize}
 
     \newpage
@@ -196,7 +205,6 @@
         Saat thread baru pertama kali dijadwalkan melalui \texttt{switch\_threads()}, jelaskan secara berurutan apa yang terjadi mulai dari \texttt{switch\_entry} hingga fungsi thread (func\_a, func\_b, atau func\_c) benar-benar mulai berjalan.
 
         \textbf{Jawaban:}\\
-       
 
         \item \textbf{Tulis implementasi \texttt{thread\_create()}.}\\
         Untuk melakukan implementasi \texttt{thread\_create()}, pastikan anda sedang berada didalam direktori \texttt{starter-code-os32} menggunakan perintah \texttt{cd starter-code-os32/src} kemudian gunakan perintah \texttt{nano thread.c} untuk menuliskan
@@ -277,11 +285,11 @@
             \item \textbf{Mengapa mengembalikan \texttt{initial\_thread}, bukan NULL?}\\
             Jelaskan apa yang akan terjadi pada fungsi \textit{schedule()} jika \texttt{next\_thread\_to\_run()} mengembalikan NULL saat antrian kosong.\\
             \textbf{Jawaban:}\\
-                
+
             \item \textbf{\texttt{thread\_block()} vs \texttt{thread\_yield()} diakhir \texttt{kernel\_main}.}
             Jelaskan perbedaan perilaku kedua fungsi tersebut setelah Thread A, B, dan C berhasil dibuat, dan mengapa \texttt{thread\_block()} adalah pilihan yang benar.\\
             \textbf{Jawaban:}\\
-               
+
             \end{itemize}
 \end{enumerate}
 
@@ -387,8 +395,7 @@ Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah s
         \textbf{Pertanyaa:}\\
         Amati apakah Thread B Thread C dan Thread D tetap berjalan setelah Thread A selesai, lalu jelaskan peran \texttt{thread\_exit()} dalam skenario ini.\\
         \textbf{Jawaban:}\\
-      
-    \item \textbf{Refleksi: cooperative vs. preemptive scheduling.}
+
     Sistem IF-OS saat ini menggunakan \textit{cooperative scheduling} di mana thread hanya berganti saat secara sadar memanggil \texttt{thread\_yield()}.
         \begin{enumerate}[label=(\alph*)]
             \item \textbf{Apa kelemahan utama cooperative scheduling dibandingkan preemptive scheduling? Berikan contoh skenario nyata di mana kelemahan ini berbahaya.}\\
@@ -396,7 +403,7 @@ Setelah langkah pada setiap sesi sudah di implementasikan dengan baik, langkah s
 
             \item \textbf{Komponen perangkat keras apa yang perlu ditambahkan agar kernel dapat memaksa pergantian thread secara otomatis tanpa bergantung pada kepatuhan thread itu sendiri?}\\
             \textbf{Jawaban:}\\
-           
+
         \end{enumerate}
 
 \end{enumerate}
